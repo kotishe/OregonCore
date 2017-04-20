@@ -659,11 +659,8 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
     }
 
     LearnSpell(27028);
-    SetSkill(129,375,375);
     LearnSpell(33359);
-    SetSkill(185,375,375);
     LearnSpell(33095);
-    SetSkill(356,375,375);
 
     for (PlayerCreateInfoItems::const_iterator item_id_itr = info->item.begin(); item_id_itr != info->item.end(); ++item_id_itr)
         StoreNewItemInBestSlots(item_id_itr->item_id, item_id_itr->item_amount);
