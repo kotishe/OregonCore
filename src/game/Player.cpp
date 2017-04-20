@@ -20915,7 +20915,7 @@ void Player::LearnAllGreenSpells()
 		break;
 	}
 
-	QueryResult_AutoPtr result = WorldDatabase.PQuery("SELECT spell FROM npc_trainer WHERE reqlevel BETWEEN 1 AND %i AND entry = %i", level, trainerID);
+	QueryResult_AutoPtr result = WorldDatabase.PQuery("SELECT spell FROM npc_trainer WHERE reqlevel BETWEEN 1 AND %i AND entry in(%i,11868,2704,20500)", level, trainerID);
 
 	if (!result)
 	{
