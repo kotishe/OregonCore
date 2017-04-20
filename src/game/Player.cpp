@@ -660,7 +660,6 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
     LearnDefaultSpells(true);
 
 	UpdateSkillsToMaxSkillsForLevel();
-	LearnAllGreenSpells();
 
     // original action bar
     std::list<uint16>::const_iterator action_itr[4];
@@ -2522,6 +2521,8 @@ void Player::GiveLevel(uint32 level, bool ignoreRAF)
     m_Played_time[PLAYED_TIME_LEVEL] = 0;                               // Level Played Time reset
     
     SetLevel(level);
+
+	LearnAllGreenSpells();
 
     UpdateSkillsForLevel();
 
@@ -20850,6 +20851,106 @@ void Player::RemoveRestFlag(RestFlag restFlag)
 
 void Player::LearnAllGreenSpells()
 {
+	uint8 level = getLevel();
+	uint32 teamID = GetTeamId();
+	uint32 trainerID;
+
+	switch (getClass())
+	{
+	case CLASS_WARRIOR:
+		if (teamID == TEAM_ALLIANCE)
+			trainerID = 17504;
+		else
+			trainerID = 985;
+		break;
+	case CLASS_ROGUE:
+		if (teamID == TEAM_ALLIANCE)
+			trainerID = 13283;
+		else
+			trainerID = 3401;
+		break;
+	case CLASS_SHAMAN:
+		if (teamID == TEAM_ALLIANCE)
+			trainerID = 20407;
+		else
+			trainerID = 13417;
+		break;
+	case CLASS_PRIEST:
+		if (teamID == TEAM_ALLIANCE)
+			trainerID = 11406;
+		else
+			trainerID = 16658;
+		break;
+	case CLASS_MAGE:
+		if (teamID == TEAM_ALLIANCE)
+			trainerID = 7312;
+		else
+			trainerID = 16653;
+		break;
+	case CLASS_WARLOCK:
+		if (teamID == TEAM_ALLIANCE)
+			trainerID = 5172;
+		else
+			trainerID = 16648;
+		break;
+	case CLASS_HUNTER:
+		if (teamID == TEAM_ALLIANCE)
+			trainerID = 5516;
+		else
+			trainerID = 3039;
+		break;
+	case CLASS_DRUID:
+		if (teamID == TEAM_ALLIANCE)
+			trainerID = 5504;
+		else
+			trainerID = 16655;
+		break;
+	case CLASS_PALADIN:
+		if (teamID == TEAM_ALLIANCE)
+			trainerID = 928;
+		else
+			trainerID = 16681;
+		break;
+	default:
+		break;
+	}
+
+	QueryResult_AutoPtr result = WorldDatabase.PQuery("SELECT spell FROM npc_trainer WHERE reqlevel BETWEEN 1 AND %i AND entry = %i", level, trainerID);
+
+	if (!result)
+	{
+		return;
+	}
+
+	do
+	{
+		Field* fields = result->Fetch();
+
+		uint32 spellID = fields[0].GetUInt32();
+
+		SpellEntry const* spellInfo = sSpellStore.LookupEntry(spellID);
+
+		if (!spellInfo)
+			continue;
+
+		// skip wrong class/race skills
+		if (!IsSpellFitByClassAndRace(spellInfo->Id))
+			continue;
+
+		// Skip known spells
+		if (HasSpell(spellInfo->Id))
+			continue;
+
+		// Skip spells with first rank learned as talent (and all talents then also)
+		if (GetTalentSpellCost(sSpellMgr.GetFirstSpellInChain(spellInfo->Id)) > 0)
+			continue;
+
+		// Skip broken spells
+		if (!SpellMgr::IsSpellValid(spellInfo, this, false))
+			continue;
+
+		LearnSpell(spellInfo->Id);
+	} while (result->NextRow());
 
 }
 
