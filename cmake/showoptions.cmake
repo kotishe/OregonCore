@@ -90,10 +90,10 @@ else()
 endif()
 
 if( USE_SFMT )
-  ShowOption("Use SFMT for RNG       :" "Yes")
+  ShowOption("Use SFMT for RNG       :" "Yes  (default)")
   add_definitions(-DUSE_SFMT_FOR_RNG)
 else()
-  ShowOption("Use SFMT for RNG       :" "No  (default)")
+  ShowOption("Use SFMT for RNG       :" "No")
 endif()
 
 if( WITH_WARNINGS )
