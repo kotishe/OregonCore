@@ -1,0 +1,8 @@
+title: Foton.core
+description: World of Warcraft 2.4.3 Server Emulator
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-minimal
+
+gems:
+  - jekyll-mentions
