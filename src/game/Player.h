@@ -2953,7 +2953,7 @@ class Player : public Unit, public GridObject<Player>
 
         uint32 m_timeSyncCounter;
         uint32 m_timeSyncTimer;
-        uint32 m_timeSyncClient;
+        int64 m_timeSyncClockDelta;
         uint32 m_timeSyncServer;
 
         // Current teleport data

@@ -1410,17 +1410,27 @@ void WorldSession::HandleTimeSyncResp(WorldPacket& recv_data)
 
     #ifdef OREGON_DEBUG
     if (counter != _player->m_timeSyncCounter - 1)
+	{
         DEBUG_LOG("Wrong time sync counter from player %s (cheater?)", _player->GetName());
+        // todo: send a new one?
+        return;
+    }
+    // time it took for the request to travel to the client, for the client to process it and reply and for response to travel back to the server.
+    uint32 roundTripDuration = getMSTimeDiff(_player->m_timeSyncServer, getMSTime());
+    uint32 lagDelay = roundTripDuration / 2; // we assume that the request processing time equals 0.
+ 
+    /*
+    clockDelta = serverTime - clientTime
+    where
+    serverTime: time that was displayed on the clock of the SERVER at the moment when the client processed the SMSG_TIME_SYNC_REQUEST packet.
 
-    DEBUG_LOG("Time sync received: counter %u, client ticks %u, time since last sync %u", counter, clientTicks, clientTicks - _player->m_timeSyncClient);
-
-    uint32 ourTicks = clientTicks + (getMSTime() - _player->m_timeSyncServer);
-
-    // diff should be small
-    DEBUG_LOG("Our ticks: %u, diff %u, latency %u", ourTicks, ourTicks - clientTicks, GetLatency());
-    #endif
-
-    _player->m_timeSyncClient = clientTicks;
+    clientTime:  time that was displayed on the clock of the CLIENT at the moment when the client processed the SMSG_TIME_SYNC_REQUEST packet.
+ 
+    Once clockDelta has been computed, we can compute the time on server clock of an event when we know the time of the event on the client clock,
+    using this relation:
+    serverTime = clockDelta + clientTime
+    */
+    _player->m_timeSyncClockDelta = (_player->m_timeSyncServer + lagDelay) - clientTicks; // in order to prevent an underflow caused by the subtraction, using int64 instead of int32
 }
 
 void WorldSession::HandleResetInstancesOpcode(WorldPacket& /*recv_data*/)
