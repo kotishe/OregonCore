@@ -20654,7 +20654,7 @@ void Player::ResetTimeSync()
 {
     m_timeSyncCounter = 0;
     m_timeSyncTimer = 0;
-    m_timeSyncClient = 0;
+    m_timeSyncClockDelta = 0;
     m_timeSyncServer = getMSTime();
 }
 
