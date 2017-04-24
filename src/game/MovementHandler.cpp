@@ -511,12 +511,16 @@ void WorldSession::HandleMoveKnockBackAck(WorldPacket& recv_data)
 
     // Calculate timestamp
     uint32 move_time, mstime;
-    mstime = getMSTime();
-    if(m_clientTimeDelay == 0)
-        m_clientTimeDelay = mstime - movementInfo.time;
-    move_time = (movementInfo.time - (mstime - m_clientTimeDelay)) + mstime;
-    movementInfo.time = move_time;
 
+	int64 movementTime = (int64)movementInfo.time + _player->m_timeSyncClockDelta;
+	if (movementTime < 0)
+	{
+		DEBUG_LOG("Computed movement time should not have a negative value. Movement time on client clock: %u. Clock delta: %ld", movementInfo.time, _player->m_timeSyncClockDelta);
+		movementTime = 0;
+	}
+	movementInfo.time = (uint32)movementTime;
+	
+		
     // Save movement flags
     GetPlayer()->SetUnitMovementFlags(movementInfo.GetMovementFlags());
 
