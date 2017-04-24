@@ -1415,6 +1415,8 @@ void WorldSession::HandleTimeSyncResp(WorldPacket& recv_data)
         // todo: send a new one?
         return;
     }
+    #endif
+
     // time it took for the request to travel to the client, for the client to process it and reply and for response to travel back to the server.
     uint32 roundTripDuration = getMSTimeDiff(_player->m_timeSyncServer, getMSTime());
     uint32 lagDelay = roundTripDuration / 2; // we assume that the request processing time equals 0.
