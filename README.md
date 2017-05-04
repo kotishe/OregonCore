@@ -31,4 +31,4 @@ If you have found a bug you may report it on our bugtracker, issues must include
 [5]: https://forums.oregon-core.net/
 [6]: irc://irc.oregon-core.net
 [7]: https://travis-ci.org/superwow/foton.core
-[8]: https://ci.appveyor.com/project/OregonCore/OregonCore/branch/master
+[8]: https://ci.appveyor.com/project/superwow/foton.core/branch/master
