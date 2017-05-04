@@ -24,6 +24,10 @@ We have also a public IRC `#OregonCore` at [irc.oregon-core.net][6], this is a p
 
 If you have found a bug you may report it on our bugtracker, issues must include revision hash and as many details as possible to aide us in resolving it as quickly as possible.
 
+
+[![Analytics](https://ga-beacon.appspot.com/UA-1293902-17/welcome-page)](https://github.com/superwow/foton.core)
+
+
 [1]: https://travis-ci.org/superwow/foton.core.svg?branch=master
 [2]: https://ci.appveyor.com/api/projects/status/xyp5r3row7ipb3t9/branch/master?svg=true
 [3]: https://wiki.oregon-core.net/
