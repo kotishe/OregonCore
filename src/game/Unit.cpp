@@ -2211,7 +2211,7 @@ void Unit::CalcAbsorbResist(Unit* victim, SpellSchoolMask schoolMask, DamageEffe
             }
         }
 
-		int32 currentAbsorb = 0;
+        int32 currentAbsorb = 0;
         if (RemainingDamage >= *p_absorbAmount)
             currentAbsorb = *p_absorbAmount;
         else
