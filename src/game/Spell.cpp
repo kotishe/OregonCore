@@ -2538,6 +2538,10 @@ void Spell::cast(bool skipCheck)
         }
     }
 
+    // Deadly Throw Interrupt
+    if (m_spellInfo->Id == 26679 && m_caster->HasAura(32748, 0))
+        m_caster->CastSpell(m_targets.getUnitTarget(), 32747, true);
+
     // Clear spell cooldowns after every spell is cast if .cheat cooldown is enabled.
     if (m_caster->GetTypeId() == TYPEID_PLAYER)
     {
