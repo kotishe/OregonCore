@@ -3205,10 +3205,19 @@ void Spell::EffectEnergize(SpellEffIndex effIndex)
 {
     if (!unitTarget)
         return;
+
     if (!unitTarget->IsAlive())
         return;
 
     if (m_spellInfo->EffectMiscValue[effIndex] < 0 || m_spellInfo->EffectMiscValue[effIndex] >= MAX_POWERS)
+        return;
+
+    Powers power = Powers(m_spellInfo->EffectMiscValue[i]);
+
+    if (unitTarget->GetTypeId() == TYPEID_PLAYER && unitTarget->getPowerType() != power)
+        return;
+
+    if (unitTarget->GetMaxPower(power) == 0)
         return;
 
     // Some level depends spells
@@ -3242,11 +3251,6 @@ void Spell::EffectEnergize(SpellEffIndex effIndex)
     if (m_spellInfo->SpellFamilyName == SPELLFAMILY_MAGE && m_spellInfo->SpellFamilyFlags == 0x10000000000LL)
         if (unitTarget->HasAura(37447, 0))
             unitTarget->CastSpell(unitTarget, 37445, true);
-
-    Powers power = Powers(m_spellInfo->EffectMiscValue[effIndex]);
-
-    if (unitTarget->GetMaxPower(power) == 0)
-        return;
 
     unitTarget->ModifyPower(power, damage);
     m_caster->SendEnergizeSpellLog(unitTarget, m_spellInfo->Id, damage, power);
