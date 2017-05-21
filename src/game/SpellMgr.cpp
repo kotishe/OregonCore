@@ -2652,6 +2652,9 @@ void SpellMgr::LoadSpellCustomAttr()
         case 23451: // Speed
             spellInfo->Attributes |= SPELL_ATTR0_NEGATIVE_1;
             break;
+        case 20271: //Paladins Judgement
+            spellInfo->AttributesEx3 &= ~SPELL_ATTR3_CANT_TRIGGER_PROC;
+            break;
         default:
             break;
         }
