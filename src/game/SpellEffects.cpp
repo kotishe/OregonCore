@@ -3212,7 +3212,7 @@ void Spell::EffectEnergize(SpellEffIndex effIndex)
     if (m_spellInfo->EffectMiscValue[effIndex] < 0 || m_spellInfo->EffectMiscValue[effIndex] >= MAX_POWERS)
         return;
 
-    Powers power = Powers(m_spellInfo->EffectMiscValue[i]);
+    Powers power = Powers(m_spellInfo->EffectMiscValue[effIndex]);
 
     if (unitTarget->GetTypeId() == TYPEID_PLAYER && unitTarget->getPowerType() != power)
         return;
