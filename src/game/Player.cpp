@@ -19197,18 +19197,14 @@ void Player::LearnDefaultSpells(bool loading)
 {
     // learn default race/class spells
     PlayerInfo const* info = sObjectMgr.GetPlayerInfo(getRace(), getClass());
-    std::list<CreateSpellPair>::const_iterator spell_itr;
-    for (spell_itr = info->spell.begin(); spell_itr != info->spell.end(); ++spell_itr)
+    for (PlayerCreateInfoSpells::const_iterator spell_itr = info->spell.begin(); spell_itr != info->spell.end(); ++spell_itr)
     {
-        uint16 tspell = spell_itr->first;
-        if (tspell)
-        {
-            DEBUG_LOG("PLAYER: Adding initial spell, id = %u", tspell);
-            if (loading || !spell_itr->second)               // not care about passive spells or loading case
-                AddSpell(tspell, spell_itr->second);
-            else                                            // but send in normal spell in game learn case
-                LearnSpell(tspell);
-        }
+        uint16 tspell = *spell_itr;
+        DEBUG_LOG("PLAYER: Adding initial spell, id = %u", tspell);
+        if (!IsInWorld())                               // will send in INITIAL_SPELLS in list anyway at map add
+            AddSpell(tspell, true, true, true, false);
+        else                                            // but send in normal spell in game learn case
+            LearnSpell(tspell);
     }
 }
 
