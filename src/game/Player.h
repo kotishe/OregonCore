@@ -159,7 +159,7 @@ enum ActionButtonType
 
 typedef std::map<uint8, ActionButton> ActionButtonList;
 
-typedef std::pair<uint16, uint8> CreateSpellPair;
+typedef std::list<uint16> PlayerCreateInfoSpells;
 
 struct PlayerCreateInfoItem
 {
@@ -209,7 +209,7 @@ struct PlayerInfo
     uint16 displayId_m;
     uint16 displayId_f;
     PlayerCreateInfoItems item;
-    std::list<CreateSpellPair> spell;
+    PlayerCreateInfoSpells spell;
     std::list<uint16> action[4];
 
     PlayerLevelInfo* levelInfo;                             //[level-1] 0..MaxPlayerLevel-1

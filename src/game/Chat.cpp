@@ -108,6 +108,17 @@ ChatCommand* ChatHandler::getCommandTable()
         { NULL,             0,                  false, NULL,                                           "", NULL }
     };
 
+    static ChatCommand modifyspeedCommandTable[] =
+	{
+	   { "all",             SEC_MODERATOR,      false, &ChatHandler::HandleModifyASpeedCommand,        "", NULL },
+	   { "backwalk",        SEC_MODERATOR,      false, &ChatHandler::HandleModifyBWalkCommand,         "", NULL },
+	   { "fly",             SEC_MODERATOR,      false, &ChatHandler::HandleModifyFlyCommand,           "", NULL },
+	   { "walk",            SEC_MODERATOR,      false, &ChatHandler::HandleModifySpeedCommand,         "", NULL },
+	   { "swim",            SEC_MODERATOR,      false, &ChatHandler::HandleModifySwimCommand,          "", NULL },
+	   { "",                SEC_MODERATOR,      false, &ChatHandler::HandleModifyASpeedCommand,        "", NULL },
+	   { NULL,              0,                  false, NULL,                                           "", NULL }
+	};
+
     static ChatCommand modifyCommandTable[] =
     {
         { "hp",             SEC_MODERATOR,      false, &ChatHandler::HandleModifyHPCommand,            "", NULL },
@@ -115,13 +126,9 @@ ChatCommand* ChatHandler::getCommandTable()
         { "rage",           SEC_MODERATOR,      false, &ChatHandler::HandleModifyRageCommand,          "", NULL },
         { "energy",         SEC_MODERATOR,      false, &ChatHandler::HandleModifyEnergyCommand,        "", NULL },
         { "money",          SEC_MODERATOR,      false, &ChatHandler::HandleModifyMoneyCommand,         "", NULL },
-        { "speed",          SEC_MODERATOR,      false, &ChatHandler::HandleModifySpeedCommand,         "", NULL },
-        { "swim",           SEC_MODERATOR,      false, &ChatHandler::HandleModifySwimCommand,          "", NULL },
+        { "speed",          SEC_MODERATOR,      false, NULL,                                           "", modifyspeedCommandTable },
         { "scale",          SEC_MODERATOR,      false, &ChatHandler::HandleModifyScaleCommand,         "", NULL },
         { "bit",            SEC_MODERATOR,      false, &ChatHandler::HandleModifyBitCommand,           "", NULL },
-        { "bwalk",          SEC_MODERATOR,      false, &ChatHandler::HandleModifyBWalkCommand,         "", NULL },
-        { "fly",            SEC_MODERATOR,      false, &ChatHandler::HandleModifyFlyCommand,           "", NULL },
-        { "aspeed",         SEC_MODERATOR,      false, &ChatHandler::HandleModifyASpeedCommand,        "", NULL },
         { "faction",        SEC_MODERATOR,      false, &ChatHandler::HandleModifyFactionCommand,       "", NULL },
         { "spell",          SEC_MODERATOR,      false, &ChatHandler::HandleModifySpellCommand,         "", NULL },
         { "tp",             SEC_MODERATOR,      false, &ChatHandler::HandleModifyTalentCommand,        "", NULL },

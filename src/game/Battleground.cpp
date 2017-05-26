@@ -781,6 +781,10 @@ void Battleground::EndBattleground(uint32 winner)
         if (plr->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
             plr->RemoveSpellsCausingAura(SPELL_AURA_MOD_SHAPESHIFT);
 
+        // should remove fear
+        if (plr->HasAuraType(SPELL_AURA_MOD_FEAR))
+            plr->RemoveSpellsCausingAura(SPELL_AURA_MOD_FEAR);
+
         if (!plr->IsAlive())
         {
             plr->ResurrectPlayer(1.0f);

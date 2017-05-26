@@ -2185,20 +2185,40 @@ void Unit::CalcAbsorbResist(Unit* victim, SpellSchoolMask schoolMask, DamageEffe
     {
         next = i;
         ++next;
-        int32* p_absorbAmount = &(*i)->GetModifier()->m_amount;
 
         // check damage school mask
         if (((*i)->GetModifier()->m_miscvalue & schoolMask) == 0)
             continue;
 
-        int32 currentAbsorb;
+        // base_amount + spell_bonus_coeff
+        int32 *p_absorbAmount = &(*i)->GetModifier()->m_amount;
+
+        int32 base_absorb = (*i)->GetSpellProto()->EffectBasePoints[(*i)->GetEffIndex()] + (*i)->GetSpellProto()->EffectDieSides[(*i)->GetEffIndex()];
+        int32 bonus_absorb = *p_absorbAmount - base_absorb; // spell power part
+
+        if (bonus_absorb > 0)
+        {
+            if (RemainingDamage >= bonus_absorb)
+            {
+                *p_absorbAmount -= bonus_absorb;
+                RemainingDamage -= bonus_absorb;
+            }
+            else
+            {
+                *p_absorbAmount -= RemainingDamage;
+                RemainingDamage = 0;
+                continue;
+            }
+        }
+
+        int32 currentAbsorb = 0;
         if (RemainingDamage >= *p_absorbAmount)
             currentAbsorb = *p_absorbAmount;
         else
             currentAbsorb = RemainingDamage;
 
         float manaMultiplier = (*i)->GetSpellProto()->EffectMultipleValue[(*i)->GetEffIndex()];
-        if (Player* modOwner = GetSpellModOwner())
+        if (Player* modOwner = victim->GetSpellModOwner())
             modOwner->ApplySpellMod((*i)->GetId(), SPELLMOD_MULTIPLE_VALUE, manaMultiplier);
 
         if (manaMultiplier)
@@ -2356,8 +2376,15 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst(const Unit* victim, WeaponAttackTy
 
 MeleeHitOutcome Unit::RollMeleeOutcomeAgainst (const Unit* victim, WeaponAttackType attType, int32 crit_chance, int32 miss_chance, int32 dodge_chance, int32 parry_chance, int32 block_chance, bool SpellCasted) const
 {
-    if (victim->GetTypeId() == TYPEID_UNIT && victim->ToCreature()->IsInEvadeMode())
-        return MELEE_HIT_EVADE;
+    // special cases for units
+    if (victim->GetTypeId() == TYPEID_UNIT)
+    {
+        if (victim->ToCreature()->IsInEvadeMode())
+            return MELEE_HIT_EVADE;
+
+        if (victim->ToCreature()->IsTotem())
+            return MELEE_HIT_NORMAL;
+    }
 
     int32 attackerMaxSkillValueForLevel = GetMaxSkillValueForLevel(victim);
     int32 victimMaxSkillValueForLevel = victim->GetMaxSkillValueForLevel(this);
@@ -2913,6 +2940,10 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit* victim, SpellEntry const* spellInf
         modHitChance = 96 - leveldif;
     else
         modHitChance = 94 - (leveldif - 2) * lchance;
+
+    // Base hit chance for holy spells should be 100
+    if (schoolMask & SPELL_SCHOOL_HOLY)
+        modHitChance = 100;
 
     // Spellmod from SPELLMOD_RESIST_MISS_CHANCE
     if (Player* modOwner = GetSpellModOwner())
@@ -5727,7 +5758,8 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, Aura* triggeredByAur
         }
     case SPELLFAMILY_ROGUE:
         {
-            switch (dummySpell->Id)
+            // Should be casted before projectile hits target
+            /*switch (dummySpell->Id)
             {
             // Deadly Throw Interrupt
             case 32748:
@@ -5739,7 +5771,7 @@ bool Unit::HandleDummyAuraProc(Unit* victim, uint32 damage, Aura* triggeredByAur
                     triggered_spell_id = 32747;
                     break;
                 }
-            }
+            }*/
             /*switch (dummySpell->SpellIconID) // @todo Should this be here?
             {*/ 
             // Quick Recovery
@@ -8217,11 +8249,15 @@ uint32 Unit::SpellDamageBonus(Unit* victim, SpellEntry const* spellProto, uint32
             // Judgement of Righteousness - 71.43%
             else if ((spellProto->SpellFamilyFlags & 1024) && spellProto->SpellIconID == 25)
                 CastingTime = 2500;
-            // Seal of Vengeance - 17% per Fully Stacked Tick - 5 Applications
+            // Seal of Vengeance - DOT: 17% per Application, DIRECT: 1.1%
             else if ((spellProto->SpellFamilyFlags & 0x80000000000LL) && spellProto->SpellIconID == 2292)
             {
                 DotFactor = 0.17f;
                 CastingTime = 3500;
+            }
+            else if (spellProto->Id == 42463)
+            {
+                CastingTime = 160;
             }
             // Holy shield - 5% of Holy Damage
             else if ((spellProto->SpellFamilyFlags & 0x4000000000LL) && spellProto->SpellIconID == 453)
@@ -11757,13 +11793,13 @@ Player* Unit::GetSpellModOwner() const
     if (Player* player = const_cast<Unit*>(this)->ToPlayer())
         return player;
 
-    if (IsPet() || IsTotem())
+    if (HasUnitTypeMask(UNIT_MASK_PET | UNIT_MASK_TOTEM | UNIT_MASK_GUARDIAN))
     {
         if (Unit* owner = GetOwner())
             if (Player* player = owner->ToPlayer())
                 return player;
     }
-    return NULL;
+    return nullptr;
 }
 
 //----------Pet responses methods-----------------

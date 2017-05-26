@@ -985,6 +985,15 @@ void Spell::EffectDummy(SpellEffIndex effIndex)
                     m_caster->CastSpell(m_caster, spell_id, true, NULL);
                     return;
                 }
+            case 17770:                                 // Wolfshead Helm Energy
+                {
+                    if (unitTarget->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        uint32 curEnergy = unitTarget->GetPower(POWER_ENERGY);
+                        unitTarget->SetPower(POWER_ENERGY, curEnergy + 20);
+                    }
+                    return;
+                }
             case 20577:                                 // Cannibalize
                 {
                     if (unitTarget)
@@ -3205,10 +3214,19 @@ void Spell::EffectEnergize(SpellEffIndex effIndex)
 {
     if (!unitTarget)
         return;
+
     if (!unitTarget->IsAlive())
         return;
 
     if (m_spellInfo->EffectMiscValue[effIndex] < 0 || m_spellInfo->EffectMiscValue[effIndex] >= MAX_POWERS)
+        return;
+
+    Powers power = Powers(m_spellInfo->EffectMiscValue[effIndex]);
+
+    if (unitTarget->GetTypeId() == TYPEID_PLAYER && unitTarget->getPowerType() != power)
+        return;
+
+    if (unitTarget->GetMaxPower(power) == 0)
         return;
 
     // Some level depends spells
@@ -3242,11 +3260,6 @@ void Spell::EffectEnergize(SpellEffIndex effIndex)
     if (m_spellInfo->SpellFamilyName == SPELLFAMILY_MAGE && m_spellInfo->SpellFamilyFlags == 0x10000000000LL)
         if (unitTarget->HasAura(37447, 0))
             unitTarget->CastSpell(unitTarget, 37445, true);
-
-    Powers power = Powers(m_spellInfo->EffectMiscValue[effIndex]);
-
-    if (unitTarget->GetMaxPower(power) == 0)
-        return;
 
     unitTarget->ModifyPower(power, damage);
     m_caster->SendEnergizeSpellLog(unitTarget, m_spellInfo->Id, damage, power);
@@ -4653,8 +4666,31 @@ void Spell::SpellDamageWeaponDmg(SpellEffIndex effIndex)
     {
     case SPELLFAMILY_WARRIOR:
         {
+            // Heroic Strike
+            if (m_spellInfo->SpellFamilyFlags & 0x40)
+            {
+                switch (m_spellInfo->Id)
+                {
+                    // Heroic Strike r10 + r11
+                    case 29707:
+                    case 30324:
+                    {
+                        Unit::AuraList const& decSpeedList = unitTarget->GetAurasByType(SPELL_AURA_MOD_DECREASE_SPEED);
+                        for (Unit::AuraList::const_iterator iter = decSpeedList.begin(); iter != decSpeedList.end(); ++iter)
+                        {
+                            if ((*iter)->GetSpellProto()->SpellIconID == 15 && (*iter)->GetSpellProto()->Dispel == 0)
+                            {
+                                fixed_bonus += (m_spellInfo->Id == 29707) ? 61 : 72;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                break;
+            }
             // Devastate bonus and sunder armor refresh
-            if (m_spellInfo->SpellVisual == 671 && m_spellInfo->SpellIconID == 1508)
+            else if (m_spellInfo->SpellVisual == 671 && m_spellInfo->SpellIconID == 1508)
             {
                 uint32 stack = 0;
 
