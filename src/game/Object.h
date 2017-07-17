@@ -776,6 +776,7 @@ class WorldObject : public Object, public WorldLocation
 
         virtual void SendMessageToSet(WorldPacket *data, bool self) { SendMessageToSetInRange(data, GetVisibilityRange(), self); }
         virtual void SendMessageToSetInRange(WorldPacket* data, float dist, bool self);
+        void SendMessageToSetExcept(WorldPacket* data, Player const* skipped_receiver);
 
         virtual uint8 getLevelForTarget(WorldObject const* /*target*/) const { return 1; }
 

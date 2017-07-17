@@ -11798,13 +11798,43 @@ Player* Unit::GetSpellModOwner() const
 //----------Pet responses methods-----------------
 void Unit::SendPetCastFail(uint32 spellid, SpellCastResult msg)
 {
+    if (msg == SPELL_CAST_OK)
+        return;
+
     Unit* owner = GetCharmerOrOwner();
     if (!owner || owner->GetTypeId() != TYPEID_PLAYER)
         return;
 
-    WorldPacket data(SMSG_PET_CAST_FAILED, 4 + 1);
+    WorldPacket data(SMSG_PET_CAST_FAILED, 4 + 1 + 1);
     data << uint32(spellid);
+    data << uint8(0);
     data << uint8(msg);
+
+    switch (msg)
+    {
+        case SPELL_FAILED_EQUIPPED_ITEM_CLASS:
+        case SPELL_FAILED_EQUIPPED_ITEM_CLASS_MAINHAND:
+        case SPELL_FAILED_EQUIPPED_ITEM_CLASS_OFFHAND:
+            data << int32(0);
+            data << int32(0);
+            break;
+
+        case SPELL_FAILED_REQUIRES_SPELL_FOCUS:
+            data << int32(0);
+            break;
+
+        case SPELL_FAILED_REQUIRES_AREA:
+            data << int32(0);
+            break;
+
+        case SPELL_FAILED_PREVENTED_BY_MECHANIC:
+            data << int32(0);
+            break;
+
+        default:
+            break;
+    }
+
     owner->ToPlayer()->GetSession()->SendPacket(&data);
 }
 

@@ -2343,7 +2343,7 @@ void Spell::cancel(bool sendInterrupt)
     case SPELL_STATE_PREPARING:
     case SPELL_STATE_DELAYED:
         {
-            SendInterrupted(0);
+            SendInterrupted(SPELL_FAILED_INTERRUPTED);
             if (sendInterrupt)
                 SendCastResult(SPELL_FAILED_INTERRUPTED);
         }
@@ -2371,7 +2371,7 @@ void Spell::cancel(bool sendInterrupt)
             // that happens when a caster recasts the spell before the channeling ended
             if (!IsChanneledSpell(m_spellInfo))
             {
-                SendInterrupted(0);
+                SendInterrupted(SPELL_FAILED_INTERRUPTED);
                 if (sendInterrupt)
                     SendCastResult(SPELL_FAILED_INTERRUPTED);
             }
@@ -2446,7 +2446,7 @@ void Spell::cast(bool skipCheck)
         if (castResult != SPELL_CAST_OK)
         {
             SendCastResult(castResult);
-            SendInterrupted(0);
+            SendInterrupted(SPELL_FAILED_INTERRUPTED);
             finish(false);
             SetExecutedCurrently(false);
             return;
@@ -2458,7 +2458,7 @@ void Spell::cast(bool skipCheck)
 
     if (m_spellState == SPELL_STATE_FINISHED)                // stop cast if spell marked as finish somewhere in Take*/FillTargetMap
     {
-        SendInterrupted(0);
+        SendInterrupted(SPELL_FAILED_INTERRUPTED);
         finish(false);
         SetExecutedCurrently(false);
         return;
@@ -3394,9 +3394,9 @@ void Spell::SendLogExecute()
     m_caster->SendMessageToSet(&data, true);
 }
 
-void Spell::SendInterrupted(uint8 result)
+void Spell::SendInterrupted(SpellCastResult result)
 {
-    WorldPacket data(SMSG_SPELL_FAILURE, (8 + 4 + 1));
+    /*WorldPacket data(SMSG_SPELL_FAILURE, (8 + 4 + 1));
     data << m_caster->GetObjectGUID();
     data << m_spellInfo->Id;
     data << result;
@@ -3405,7 +3405,26 @@ void Spell::SendInterrupted(uint8 result)
     data.Initialize(SMSG_SPELL_FAILED_OTHER, (8 + 4));
     data << m_caster->GetObjectGUID();
     data << m_spellInfo->Id;
-    m_caster->SendMessageToSet(&data, true);
+    m_caster->SendMessageToSet(&data, true);*(
+    /* Check this function, might be incorrect */
+    Player *casterPlayer = ((Player*)m_caster);
+    if (casterPlayer)
+    {
+        WorldPacket data(SMSG_SPELL_FAILURE, (8 + 4 + 1));
+        data << m_caster->GetPackGUID();
+        data << m_spellInfo->Id;
+        data << result;
+        m_caster->SendMessageToSet(&data, true);
+    }
+
+    WorldPacket data(SMSG_SPELL_FAILED_OTHER, (8 + 4));
+    data << m_caster->GetPackGUID();
+    data << m_spellInfo->Id;
+
+    if (casterPlayer)
+        casterPlayer->SendMessageToSetExcept(&data, casterPlayer);
+    else
+        m_caster->SendMessageToSet(&data, true);
 }
 
 void Spell::SendChannelUpdate(uint32 time)

@@ -1933,6 +1933,16 @@ void WorldObject::SendMessageToSetInRange(WorldPacket* data, float dist, bool /*
     VisitNearbyWorldObject(dist, notifier);
 }
 
+void WorldObject::SendMessageToSetExcept(WorldPacket* data, Player const* skipped_receiver)
+{
+    // if object is in world, map for it already created!
+    if (IsInWorld())
+    {
+        Oregon::MessageDistDeliverer notifier(this, data, GetVisibilityRange(), skipped_receiver);
+        VisitNearbyWorldObject(GetMap()->GetVisibilityRange(), notifier);
+    }
+}
+
 void WorldObject::SendObjectDeSpawnAnim(uint64 guid)
 {
     WorldPacket data(SMSG_GAMEOBJECT_DESPAWN_ANIM, 8);
