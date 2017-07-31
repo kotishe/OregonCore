@@ -572,7 +572,12 @@ void PetAI::AttackedBy(Unit* attacker)
         return;
 
     if (Unit* owner = me->GetOwner())
+    {
+        if (!me->GetVictim())
+            return;
+
         owner->SetInCombatWith(me->GetVictim());
+    }
 
     // Prevent pet from disengaging from current target
     if (me->GetVictim() && me->GetVictim()->IsAlive())
