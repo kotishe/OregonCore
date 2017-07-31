@@ -241,6 +241,7 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
             pItem->SetUInt64Value(ITEM_FIELD_GIFTCREATOR, 0);
             pItem->SetEntry(entry);
             pItem->SetUInt32Value(ITEM_FIELD_FLAGS, flags);
+            pItem->SetUInt32Value(ITEM_FIELD_MAXDURABILITY, pItem->GetProto()->MaxDurability);
             pItem->SetState(ITEM_CHANGED, pUser);
         }
         else
