@@ -38,6 +38,7 @@
 #include "CellImpl.h"
 #include "SharedDefines.h"
 #include "LootMgr.h"
+#include "MoveMap.h"
 #include "VMapFactory.h"
 #include "Battleground.h"
 #include "Util.h"
@@ -337,6 +338,8 @@ Spell::Spell(Unit* Caster, SpellEntry const* info, bool triggered, uint64 origin
     m_cast_count = 0;
     m_triggeredByAuraSpell  = NULL;
 
+    m_pathFinder = NULL;
+
     //Auto Shot & Shoot
     m_autoRepeat = IsAutoRepeatRangedSpell(m_spellInfo);
 
@@ -363,6 +366,7 @@ Spell::~Spell()
     m_destroyed = true;
 
     delete m_spellValue;
+    delete m_pathFinder;
 }
 
 void ResizeUnitListByDistance(std::list<Unit*> &_list, WorldObject* source, uint32 _size, bool _keepnearest)
@@ -2502,7 +2506,12 @@ void Spell::cast(bool skipCheck)
     }
 
     if (m_customAttr & SPELL_ATTR_CU_CHARGE)
-        EffectCharge((SpellEffIndex)0);
+    {
+        if (m_spellInfo->Effect[0] == SPELL_EFFECT_CHARGE_DEST) //swoop is always first effect
+            EffectChargeDest((SpellEffIndex)0);
+        else
+            EffectCharge((SpellEffIndex)0);
+    }
 
     // Okay, everything is prepared. Now we need to distinguish between immediate and evented delayed spells
     // @TODO: Find similarities for spells such as Ruthlessness and run the proper check here
@@ -4308,6 +4317,42 @@ SpellCastResult Spell::CheckCast(bool strict)
             {
                 if (m_caster->HasUnitState(UNIT_STATE_ROOT))
                     return SPELL_FAILED_ROOTED;
+
+                if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                    if (Unit* target = m_targets.getUnitTarget())
+                        if (!target->IsAlive())
+                            return SPELL_FAILED_BAD_TARGETS;
+
+                if (MMAP::MMapFactory::IsPathfindingEnabled(m_caster->GetMapId()))
+                {
+                    Unit* target = m_targets.getUnitTarget();
+
+                    if (!target)
+                        return SPELL_FAILED_BAD_TARGETS;
+
+                    Position pos;
+                    target->GetChargeContactPoint(m_caster, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+
+                    float maxdist = MELEE_RANGE + m_caster->GetMeleeReach() + target->GetMeleeReach();
+                    if (target->GetExactDistSq(&pos) > maxdist*maxdist)
+                        return SPELL_FAILED_NOPATH;
+
+                    if (m_caster->GetMapId() == 572) // pussywizard: 572 Ruins of Lordaeron
+                    {
+                        if (pos.GetPositionX() < 1275.0f || m_caster->GetPositionX() < 1275.0f) // special case (acid)
+                            break; // can't force path because the way is around and the path is too long
+                    }
+
+                    if (m_caster->GetTypeId() == TYPEID_PLAYER && m_caster->ToPlayer()->GetTransport())
+                        break;
+
+                    m_pathFinder = new PathInfo(m_caster);
+                    m_pathFinder->Update(pos.m_positionX, pos.m_positionY, pos.m_positionZ + 0.15f, false);
+                    G3D::Vector3 endPos = m_pathFinder->getEndPosition(); // also check distance between target and the point calculated by mmaps
+                    if (m_pathFinder->getPathType() & PATHFIND_NOPATH || target->GetExactDistSq(endPos.x, endPos.y, endPos.z) > maxdist*maxdist || m_pathFinder->getPathLength() > 45.0f)
+                        return SPELL_FAILED_NOPATH;
+                }
+                break;
 
                 break;
             }
