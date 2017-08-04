@@ -41,6 +41,7 @@
 #include "WorldSocketMgr.h"
 #include "Log.h"
 #include "DBCStores.h"
+#include "LuaEngine.h"
 
 #if defined(__GNUC__)
 #pragma pack(1)
@@ -134,6 +135,8 @@ int WorldSocket::SendPacket (const WorldPacket& pct)
     if (closing_)
         return -1;
 
+    WorldPacket pkt = pct;
+
     // Dump outgoing packet.
     if (sLog.IsLogTypeEnabled(LOG_TYPE_NETWORK))
     {
@@ -153,6 +156,9 @@ int WorldSocket::SendPacket (const WorldPacket& pct)
         }
         sLog.outNetwork("");
     }
+
+    if (!sEluna->OnPacketSend(m_Session, pkt))
+        return 0;
 
     if (iSendPacket (pct) == -1)
     {
@@ -596,10 +602,14 @@ int WorldSocket::ProcessIncoming (WorldPacket* new_pct)
                 return -1;
             }
 
+            if (!sEluna->OnPacketReceive(m_Session, *new_pct))
+                return 0;
+
             return HandleAuthSession (*new_pct);
         case CMSG_KEEP_ALIVE:
             DEBUG_LOG ("CMSG_KEEP_ALIVE ,size: %lu", new_pct->size());
 
+            sEluna->OnPacketReceive(m_Session, *new_pct);
             return 0;
         default:
             {

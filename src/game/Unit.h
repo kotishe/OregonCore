@@ -1188,6 +1188,7 @@ class Unit : public WorldObject
         }
         void RemoveSpellbyDamageTaken(uint32 damage, uint32 spell);
         uint32 DealDamage(Unit* victim, uint32 damage, CleanDamage const* cleanDamage = NULL, DamageEffectType damagetype = DIRECT_DAMAGE, SpellSchoolMask damageSchoolMask = SPELL_SCHOOL_MASK_NORMAL, SpellEntry const* spellProto = NULL, bool durabilityLoss = true);
+        int32 DealHeal(Unit* pVictim, uint32 addhealth, SpellEntry const* spellProto, bool critical = false);
         void Kill(Unit* victim, bool durabilityLoss = true);
 
         void ProcDamageAndSpell(Unit* victim, uint32 procAttacker, uint32 procVictim, uint32 procEx, uint32 amount, WeaponAttackType attType = BASE_ATTACK, SpellEntry const* procSpell = NULL, bool canTrigger = true);
@@ -1448,6 +1449,10 @@ class Unit : public WorldObject
         };
         virtual void setDeathState(DeathState s);           // overwrited in Creature/Player/Pet
 
+        void SetOwnerGUID(uint64 owner)
+        {
+            SetUInt64Value(UNIT_FIELD_SUMMONEDBY, owner);
+        }
         uint64 GetOwnerGUID() const
         {
             return  GetUInt64Value(UNIT_FIELD_SUMMONEDBY);

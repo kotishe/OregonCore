@@ -518,6 +518,7 @@ class Battleground
         {
             return m_PlayerScores.size();
         }
+        uint32 GetBonusHonorFromKill(uint32 kills) const;
 
         uint32 GetReviveQueueSize() const
         {

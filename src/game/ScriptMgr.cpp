@@ -26,6 +26,7 @@
 #include "GossipDef.h"
 #include "CreatureAIImpl.h"
 #include "Player.h"
+#include "LuaEngine.h"
 
 INSTANTIATE_SINGLETON_1(ScriptMgr);
 
@@ -325,6 +326,9 @@ char const* ScriptMgr::ScriptsVersion()
 
 bool ScriptMgr::GossipHello (Player* pPlayer, Creature* pCreature)
 {
+    if (sEluna->OnGossipHello(pPlayer, pCreature))
+        return true;
+
     Script* tmpscript = m_scripts[pCreature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipHello) return false;
 
@@ -336,6 +340,9 @@ bool ScriptMgr::GossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSend
 {
     debug_log("OSCR: Gossip selection, sender: %d, action: %d", uiSender, uiAction);
 
+    if (sEluna->OnGossipSelect(pPlayer, pCreature, uiSender, uiAction))
+        return true;
+
     Script* tmpscript = m_scripts[pCreature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipSelect) return false;
 
@@ -346,6 +353,9 @@ bool ScriptMgr::GossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSend
 bool ScriptMgr::GossipSelectWithCode(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction, const char* sCode)
 {
     debug_log("OSCR: Gossip selection with code, sender: %d, action: %d", uiSender, uiAction);
+
+    if (sEluna->OnGossipSelectCode(pPlayer, pCreature, uiSender, uiAction, sCode))
+        return true;
 
     Script* tmpscript = m_scripts[pCreature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipSelectWithCode) return false;
@@ -360,6 +370,9 @@ bool ScriptMgr::GOSelect(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint
         return false;
     debug_log("OSCR: Gossip selection, sender: %d, action: %d", uiSender, uiAction);
 
+    if (sEluna->OnGossipSelect(pPlayer, pGO, uiSender, uiAction))
+        return true;
+
     Script* tmpscript = m_scripts[pGO->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOSelect) return false;
 
@@ -373,6 +386,9 @@ bool ScriptMgr::GOSelectWithCode(Player* pPlayer, GameObject* pGO, uint32 uiSend
         return false;
     debug_log("OSCR: Gossip selection, sender: %d, action: %d", uiSender, uiAction);
 
+    if (sEluna->OnGossipSelectCode(pPlayer, pGO, uiSender, uiAction, sCode))
+        return true;
+
     Script* tmpscript = m_scripts[pGO->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOSelectWithCode) return false;
 
@@ -382,6 +398,9 @@ bool ScriptMgr::GOSelectWithCode(Player* pPlayer, GameObject* pGO, uint32 uiSend
 
 bool ScriptMgr::QuestAccept(Player* pPlayer, Creature* pCreature, Quest const* pQuest)
 {
+    if (sEluna->OnQuestAccept(pPlayer, pCreature, pQuest))
+        return true;
+
     Script* tmpscript = m_scripts[pCreature->GetScriptId()];
     if (!tmpscript || !tmpscript->pQuestAccept) return false;
 
@@ -418,6 +437,10 @@ bool ScriptMgr::ChooseReward(Player* pPlayer, Creature* pCreature, Quest const* 
 
 uint32 ScriptMgr::NPCDialogStatus(Player* pPlayer, Creature* pCreature)
 {
+    // used by eluna
+    if (uint32 dialogId = sEluna->GetDialogStatus(pPlayer, pCreature))
+        return dialogId;
+
     Script* tmpscript = m_scripts[pCreature->GetScriptId()];
     if (!tmpscript || !tmpscript->pNPCDialogStatus) return 100;
 
@@ -427,6 +450,10 @@ uint32 ScriptMgr::NPCDialogStatus(Player* pPlayer, Creature* pCreature)
 
 uint32 ScriptMgr::GODialogStatus(Player* pPlayer, GameObject* pGO)
 {
+    // used by eluna
+    if (uint32 dialogId = sEluna->GetDialogStatus(pPlayer, pGO))
+        return dialogId;
+
     Script* tmpscript = m_scripts[pGO->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGODialogStatus) return 100;
 
@@ -445,6 +472,9 @@ bool ScriptMgr::ItemHello(Player* pPlayer, Item* pItem, Quest const* pQuest)
 
 bool ScriptMgr::ItemQuestAccept(Player* pPlayer, Item* pItem, Quest const* pQuest)
 {
+    if (sEluna->OnQuestAccept(pPlayer, pItem, pQuest))
+        return true;
+
     Script* tmpscript = m_scripts[pItem->GetProto()->ScriptId];
     if (!tmpscript || !tmpscript->pItemQuestAccept) return false;
 
@@ -454,6 +484,12 @@ bool ScriptMgr::ItemQuestAccept(Player* pPlayer, Item* pItem, Quest const* pQues
 
 bool ScriptMgr::GOHello(Player* pPlayer, GameObject* pGO)
 {
+    if (sEluna->OnGossipHello(pPlayer, pGO))
+        return true;
+
+    if (sEluna->OnGameObjectUse(pPlayer, pGO))
+        return true;
+
     Script* tmpscript = m_scripts[pGO->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOHello) return false;
 
@@ -463,6 +499,9 @@ bool ScriptMgr::GOHello(Player* pPlayer, GameObject* pGO)
 
 bool ScriptMgr::GOQuestAccept(Player* pPlayer, GameObject* pGO, Quest const* pQuest)
 {
+    if (sEluna->OnQuestAccept(pPlayer, pGO, pQuest))
+        return true;
+
     Script* tmpscript = m_scripts[pGO->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOQuestAccept) return false;
 
@@ -481,6 +520,9 @@ bool ScriptMgr::GOChooseReward(Player* pPlayer, GameObject* pGO, Quest const* pQ
 
 bool ScriptMgr::AreaTrigger(Player* pPlayer, AreaTriggerEntry const* atEntry)
 {
+    if (sEluna->OnAreaTrigger(pPlayer, atEntry))
+        return true;
+
     Script* tmpscript = m_scripts[GetAreaTriggerScriptId(atEntry->id)];
     if (!tmpscript || !tmpscript->pAreaTrigger) return false;
 
@@ -489,6 +531,10 @@ bool ScriptMgr::AreaTrigger(Player* pPlayer, AreaTriggerEntry const* atEntry)
 
 CreatureAI* ScriptMgr::GetAI(Creature* pCreature)
 {
+    // used by eluna
+    if (CreatureAI* luaAI = sEluna->GetAI(pCreature))
+        return luaAI;
+
     Script* tmpscript = m_scripts[pCreature->GetScriptId()];
     if (!tmpscript || !tmpscript->GetAI) return NULL;
 
@@ -497,6 +543,9 @@ CreatureAI* ScriptMgr::GetAI(Creature* pCreature)
 
 bool ScriptMgr::ItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& targets)
 {
+    if (!sEluna->OnUse(pPlayer, pItem, targets))
+        return true;
+
     Script* tmpscript = m_scripts[pItem->GetProto()->ScriptId];
     if (!tmpscript || !tmpscript->pItemUse) return false;
 
@@ -505,11 +554,38 @@ bool ScriptMgr::ItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& ta
 
 bool ScriptMgr::EffectDummyCreature(Unit* caster, uint32 spellId, uint32 effIndex, Creature* crTarget)
 {
+    if (sEluna->OnDummyEffect(caster, spellId, (SpellEffIndex)effIndex, crTarget))
+        return true;
+
     Script* tmpscript = m_scripts[crTarget->GetScriptId()];
 
     if (!tmpscript || !tmpscript->pEffectDummyCreature) return false;
 
     return tmpscript->pEffectDummyCreature(caster, spellId, effIndex, crTarget);
+}
+
+bool ScriptMgr::EffectDummyGO(Unit* caster, uint32 spellId, uint32 effIndex, GameObject* crTarget)
+{
+    if (sEluna->OnDummyEffect(caster, spellId, (SpellEffIndex)effIndex, crTarget))
+        return true;
+
+    Script* tmpscript = m_scripts[crTarget->GetGOInfo()->ScriptId];
+
+    if (!tmpscript || !tmpscript->pEffectDummyGO) return false;
+
+    return tmpscript->pEffectDummyGO(caster, spellId, effIndex, crTarget);
+}
+
+bool ScriptMgr::EffectDummyItem(Unit* caster, uint32 spellId, uint32 effIndex, Item* crTarget)
+{
+    if (sEluna->OnDummyEffect(caster, spellId, (SpellEffIndex)effIndex, crTarget))
+        return true;
+
+    Script* tmpscript = m_scripts[crTarget->GetProto()->ScriptId];
+
+    if (!tmpscript || !tmpscript->pEffectDummyItem) return false;
+
+    return tmpscript->pEffectDummyItem(caster, spellId, effIndex, crTarget);
 }
 
 InstanceData* ScriptMgr::CreateInstanceData(Map* map)

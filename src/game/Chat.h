@@ -311,6 +311,8 @@ class ChatHandler
         bool HandleReloadAuctionsCommand(const char* args);
         bool HandleReloadConditions(const char* args);
 
+        bool HandleElunaReloadCommand(const char* args);
+
         bool HandleInstanceListBindsCommand(const char* args);
         bool HandleInstanceUnbindCommand(const char* args);
         bool HandleInstanceStatsCommand(const char* args);

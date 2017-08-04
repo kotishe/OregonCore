@@ -32,6 +32,7 @@
 #include "UpdateMask.h"
 #include "MapManager.h"
 #include "SpellMgr.h"
+#include "LuaEngine.h"
 
 bool ChatHandler::load_command_table = true;
 
@@ -361,6 +362,8 @@ ChatCommand* ChatHandler::getCommandTable()
         { "waypoint_scripts",            SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadWpScriptsCommand,               "", NULL },
         { "gm_tickets",                  SEC_ADMINISTRATOR, true,  &ChatHandler::HandleGMTicketReloadCommand,                "", NULL },
         { "account_referred",            SEC_ADMINISTRATOR, true,  &ChatHandler::HandleRAFReloadCommand,                     "", NULL },
+
+        { "eluna",                       SEC_ADMINISTRATOR, true, &ChatHandler::HandleElunaReloadCommand,                    "", NULL },
 
         { "",                            SEC_ADMINISTRATOR, true,  &ChatHandler::HandleReloadCommand,                        "", NULL },
         { NULL,                          0,                 false, NULL,                                                     "", NULL }
@@ -892,6 +895,9 @@ bool ChatHandler::ExecuteCommandInTable(ChatCommand* table, const char* text, co
         {
             if (!ExecuteCommandInTable(table[i].ChildCommands, text, fullcmd))
             {
+                if (!sEluna->OnCommand(m_session ? m_session->GetPlayer() : NULL, fullcmd.c_str()))
+                    return true;
+
                 if (text && text[0] != '\0')
                     SendSysMessage(LANG_NO_SUBCMD);
                 else
@@ -968,8 +974,12 @@ int ChatHandler::ParseCommands(const char* text)
 
     if (!ExecuteCommandInTable(getCommandTable(), text, fullcmd))
     {
+        if (!sEluna->OnCommand(m_session ? m_session->GetPlayer() : NULL, text))
+            return true;
+
         if (m_session && m_session->GetSecurity() == SEC_PLAYER)
             return 0;
+
         SendSysMessage(LANG_NO_CMD);
     }
     return 1;

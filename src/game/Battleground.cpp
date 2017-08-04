@@ -25,6 +25,8 @@
 #include "World.h"
 #include "Util.h"
 #include "GridNotifiersImpl.h"
+#include "Formulas.h"
+#include "LuaEngine.h"
 
 namespace Oregon
 {
@@ -198,6 +200,8 @@ Battleground::Battleground()
 
 Battleground::~Battleground()
 {
+    //sEluna->OnBGDestroy(this, GetTypeID(), GetInstanceID());
+
     // remove objects and creatures
     // (this is done automatically in mapmanager update, when the instance is reset after the reset time)
     int size = m_BgCreatures.size();
@@ -674,6 +678,8 @@ void Battleground::UpdateWorldStateForPlayer(uint32 Field, uint32 Value, Player*
 
 void Battleground::EndBattleground(uint32 winner)
 {
+    sEluna->OnBGEnd(this, (BattlegroundTypeId)GetTypeID(), GetInstanceID(), (Team)winner);
+
     this->RemoveFromBGFreeSlotQueue();
     uint32 almost_winning_team = HORDE;
     ArenaTeam* winner_arena_team = NULL;
@@ -1167,6 +1173,8 @@ void Battleground::StartBattleground()
     SetLastResurrectTime(0);
     if (m_IsRated)
         sLog.outArena("Arena match type: %u for Team1Id: %u - Team2Id: %u started.", m_ArenaType, m_ArenaTeamIds[BG_TEAM_ALLIANCE], m_ArenaTeamIds[BG_TEAM_HORDE]);
+
+    sEluna->OnBGStart(this, (BattlegroundTypeId)GetTypeID(), GetInstanceID());
 }
 
 void Battleground::AddPlayer(Player* plr)
@@ -1393,6 +1401,12 @@ void Battleground::UpdatePlayerScore(Player* Source, uint32 type, uint32 value)
         sLog.outError("Battleground: Unknown player score type %u", type);
         break;
     }
+}
+
+uint32 Battleground::GetBonusHonorFromKill(uint32 kills) const
+{
+    // variable kills means how many honorable kills you scored (so we need kills * honor_for_one_kill)
+    return Oregon::Honor::hk_honor_at_level(GetMaxLevel(), kills);
 }
 
 void Battleground::AddPlayerToResurrectQueue(uint64 npc_guid, uint64 player_guid)

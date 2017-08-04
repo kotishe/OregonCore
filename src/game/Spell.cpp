@@ -46,6 +46,7 @@
 #include "GameEventMgr.h"
 #include "DisableMgr.h"
 #include "ConditionMgr.h"
+#include "LuaEngine.h"
 
 #define SPELL_CHANNEL_UPDATE_INTERVAL (1*IN_MILLISECONDS)
 
@@ -2440,6 +2441,10 @@ void Spell::cast(bool skipCheck)
             return;
         }
     }
+	
+    // used by eluna
+    if (m_caster->GetTypeId() == TYPEID_PLAYER)
+        sEluna->OnSpellCast(m_caster->ToPlayer(), this, skipCheck);
 
     // triggered cast called from Spell::prepare where it was already checked
     if (!skipCheck)

@@ -33,6 +33,7 @@
 #include "CreatureAI.h"
 #include "GameObjectAI.h"
 #include "ConditionMgr.h"
+#include "LuaEngine.h"
 
 void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket& recv_data)
 {
@@ -402,6 +403,9 @@ void WorldSession::HandleQuestLogRemoveQuest(WorldPacket& recv_data)
             }
 
             _player->SetQuestStatus(quest, QUEST_STATUS_NONE);
+
+            // used by eluna
+            sEluna->OnQuestAbandon(_player, quest);
         }
 
         _player->SetQuestSlot(slot, 0);

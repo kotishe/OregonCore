@@ -37,6 +37,7 @@ class Field
         {
             return mType;
         }
+        bool IsNULL() const { return mValue == NULL; }
 
         const char* GetString() const
         {

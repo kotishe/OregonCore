@@ -53,6 +53,7 @@
 #include "GameObjectAI.h"
 #include "InstanceData.h"
 #include "MoveSplineInit.h"
+#include "LuaEngine.h"
 
 pEffect SpellEffects[TOTAL_SPELL_EFFECTS] =
 {
@@ -2268,6 +2269,10 @@ void Spell::EffectDummy(SpellEffIndex effIndex)
 
     if (unitTarget && unitTarget->GetTypeId() == TYPEID_UNIT)
         sScriptMgr.EffectDummyCreature(m_caster, m_spellInfo->Id, effIndex, unitTarget->ToCreature());
+    else if (gameObjTarget && gameObjTarget->GetTypeId() == TYPEID_GAMEOBJECT)
+        sScriptMgr.EffectDummyGO(m_caster, m_spellInfo->Id, effIndex, gameObjTarget);
+    else if (itemTarget && itemTarget->GetTypeId() == TYPEID_ITEM)
+        sScriptMgr.EffectDummyItem(m_caster, m_spellInfo->Id, effIndex, itemTarget);
 }
 
 void Spell::EffectTriggerSpellWithValue(SpellEffIndex effIndex)
@@ -3719,6 +3724,9 @@ void Spell::EffectSummonType(SpellEffIndex effIndex)
                     summon->SetMaxHealth(damage);
                     summon->SetHealth(damage);
                 }
+
+                if (Unit* summoner = m_caster->ToUnit())
+                    sEluna->OnSummoned(summon, summoner);
                 break;
             }
         case SUMMON_TYPE_MINIPET:
@@ -3774,6 +3782,9 @@ void Spell::EffectSummonType(SpellEffIndex effIndex)
                             summon->AI()->EnterCombat(nullptr);
                         break;
                 }
+
+                if (Unit* summoner = m_originalCaster->ToUnit())
+                    sEluna->OnSummoned(summon, summoner);
             }
             return;
         }
@@ -6101,6 +6112,9 @@ void Spell::EffectDuel(SpellEffIndex effIndex)
 
     caster->SetUInt64Value(PLAYER_DUEL_ARBITER, pGameObj->GetGUID());
     target->SetUInt64Value(PLAYER_DUEL_ARBITER, pGameObj->GetGUID());
+
+    // used by eluna
+    sEluna->OnDuelRequest(target, caster);
 }
 
 void Spell::EffectStuck(SpellEffIndex /*effIndex*/)
@@ -7450,6 +7464,9 @@ void Spell::SummonGuardian(uint32 i, uint32 entry, SummonPropertiesEntry const* 
 
         summon->SetUInt32Value(UNIT_CREATED_BY_SPELL, m_spellInfo->Id);
         summon->AI()->EnterEvadeMode();
+
+        if (Unit* summoner = m_caster->ToUnit())
+            sEluna->OnSummoned(summon, summoner);
     }
 }
 

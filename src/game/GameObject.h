@@ -836,6 +836,18 @@ class GameObject : public WorldObject, public GridObject<GameObject>
         GameObjectAI* AI() const { return m_AI; }
 
         std::string GetAIName() const;
+
+        // Loot System
+        uint64 GetLootRecipientGuid() const { return m_lootRecipientGuid; }
+        uint64 GetLootGroupRecipientId() const { return m_lootGroupRecipientId; }
+        Player* GetLootRecipient() const;                   // use group cases as prefered
+        Group* GetGroupLootRecipient() const;
+        bool HasLootRecipient() const { return m_lootGroupRecipientId || m_lootRecipientGuid; }
+        bool IsGroupLootRecipient() const { return m_lootGroupRecipientId; }
+        void SetLootRecipient(Unit* pUnit);
+        Player* GetOriginalLootRecipient() const;           // ignore group changes/etc, not for looting
+
+        uint32 GetDisplayId() const { return GetUInt32Value(GAMEOBJECT_DISPLAYID); }
     protected:
         bool AIM_Initialize();
         uint32      m_spellId;
@@ -857,6 +869,11 @@ class GameObject : public WorldObject, public GridObject<GameObject>
         void SetDisplayId(uint32 displayid);
 
         GameObjectModel * m_model;
+
+        // Loot System
+        uint64 m_lootRecipientGuid;                     // player who will have rights for looting if m_lootGroupRecipient==0 or group disbanded
+        uint64 m_lootGroupRecipientId;                      // group who will have rights for looting if set and exist
+
     private:
         void SwitchDoorOrButton(bool activate, bool alternative = false);
 

@@ -861,6 +861,17 @@ MailReceiver::MailReceiver(Player* receiver, uint32 receiver_lowguid) : m_receiv
 }
 
 /**
+* Creates a new MailDraft object using subject and contect texts.
+*
+* @param subject The subject of the mail.
+* @param itemText The text of the body of the mail.
+*/
+MailDraft::MailDraft(std::string subject, std::string text) : m_mailTemplateId(0), m_mailTemplateItemsNeed(false), m_subject(subject),
+m_bodyId(!text.empty() ? sObjectMgr.CreateItemText(text) : 0), m_money(0), m_COD(0)
+{
+}
+
+/**
  * Adds an item to the MailDraft.
  *
  * @param item The item to be added to the MailDraft.
