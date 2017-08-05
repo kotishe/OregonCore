@@ -38,6 +38,7 @@
 #include "CellImpl.h"
 #include "SharedDefines.h"
 #include "LootMgr.h"
+#include "MoveMap.h"
 #include "VMapFactory.h"
 #include "Battleground.h"
 #include "Util.h"
@@ -45,6 +46,7 @@
 #include "GameEventMgr.h"
 #include "DisableMgr.h"
 #include "ConditionMgr.h"
+#include "LuaEngine.h"
 
 #define SPELL_CHANNEL_UPDATE_INTERVAL (1*IN_MILLISECONDS)
 
@@ -337,6 +339,8 @@ Spell::Spell(Unit* Caster, SpellEntry const* info, bool triggered, uint64 origin
     m_cast_count = 0;
     m_triggeredByAuraSpell  = NULL;
 
+    m_pathFinder = NULL;
+
     //Auto Shot & Shoot
     m_autoRepeat = IsAutoRepeatRangedSpell(m_spellInfo);
 
@@ -367,6 +371,7 @@ Spell::~Spell()
     m_destroyed = true;
 
     delete m_spellValue;
+    delete m_pathFinder;
 }
 
 void ResizeUnitListByDistance(std::list<Unit*> &_list, WorldObject* source, uint32 _size, bool _keepnearest)
@@ -2347,7 +2352,7 @@ void Spell::cancel(bool sendInterrupt)
     case SPELL_STATE_PREPARING:
     case SPELL_STATE_DELAYED:
         {
-            SendInterrupted(0);
+            SendInterrupted(SPELL_FAILED_INTERRUPTED);
             if (sendInterrupt)
                 SendCastResult(SPELL_FAILED_INTERRUPTED);
         }
@@ -2375,7 +2380,7 @@ void Spell::cancel(bool sendInterrupt)
             // that happens when a caster recasts the spell before the channeling ended
             if (!IsChanneledSpell(m_spellInfo))
             {
-                SendInterrupted(0);
+                SendInterrupted(SPELL_FAILED_INTERRUPTED);
                 if (sendInterrupt)
                     SendCastResult(SPELL_FAILED_INTERRUPTED);
             }
@@ -2453,6 +2458,10 @@ void Spell::cast(bool skipCheck)
             return;
         }
     }
+	
+    // used by eluna
+    if (m_caster->GetTypeId() == TYPEID_PLAYER)
+        sEluna->OnSpellCast(m_caster->ToPlayer(), this, skipCheck);
 
     // triggered cast called from Spell::prepare where it was already checked
     if (!skipCheck)
@@ -2463,7 +2472,7 @@ void Spell::cast(bool skipCheck)
         if (castResult != SPELL_CAST_OK)
         {
             SendCastResult(castResult);
-            SendInterrupted(0);
+            SendInterrupted(SPELL_FAILED_INTERRUPTED);
             finish(false);
             SetExecutedCurrently(false);
             return;
@@ -2475,7 +2484,7 @@ void Spell::cast(bool skipCheck)
 
     if (m_spellState == SPELL_STATE_FINISHED)                // stop cast if spell marked as finish somewhere in Take*/FillTargetMap
     {
-        SendInterrupted(0);
+        SendInterrupted(SPELL_FAILED_INTERRUPTED);
         finish(false);
         SetExecutedCurrently(false);
         return;
@@ -2519,7 +2528,12 @@ void Spell::cast(bool skipCheck)
     }
 
     if (m_customAttr & SPELL_ATTR_CU_CHARGE)
-        EffectCharge((SpellEffIndex)0);
+    {
+        if (m_spellInfo->Effect[0] == SPELL_EFFECT_CHARGE_DEST) //swoop is always first effect
+            EffectChargeDest((SpellEffIndex)0);
+        else
+            EffectCharge((SpellEffIndex)0);
+    }
 
     // Okay, everything is prepared. Now we need to distinguish between immediate and evented delayed spells
     // @TODO: Find similarities for spells such as Ruthlessness and run the proper check here
@@ -3411,9 +3425,9 @@ void Spell::SendLogExecute()
     m_caster->SendMessageToSet(&data, true);
 }
 
-void Spell::SendInterrupted(uint8 result)
+void Spell::SendInterrupted(SpellCastResult result)
 {
-    WorldPacket data(SMSG_SPELL_FAILURE, (8 + 4 + 1));
+    /*WorldPacket data(SMSG_SPELL_FAILURE, (8 + 4 + 1));
     data << m_caster->GetObjectGUID();
     data << m_spellInfo->Id;
     data << result;
@@ -3422,7 +3436,26 @@ void Spell::SendInterrupted(uint8 result)
     data.Initialize(SMSG_SPELL_FAILED_OTHER, (8 + 4));
     data << m_caster->GetObjectGUID();
     data << m_spellInfo->Id;
-    m_caster->SendMessageToSet(&data, true);
+    m_caster->SendMessageToSet(&data, true);*(
+    /* Check this function, might be incorrect */
+    Player *casterPlayer = ((Player*)m_caster);
+    if (casterPlayer)
+    {
+        WorldPacket data(SMSG_SPELL_FAILURE, (8 + 4 + 1));
+        data << m_caster->GetPackGUID();
+        data << m_spellInfo->Id;
+        data << result;
+        m_caster->SendMessageToSet(&data, true);
+    }
+
+    WorldPacket data(SMSG_SPELL_FAILED_OTHER, (8 + 4));
+    data << m_caster->GetPackGUID();
+    data << m_spellInfo->Id;
+
+    if (casterPlayer)
+        casterPlayer->SendMessageToSetExcept(&data, casterPlayer);
+    else
+        m_caster->SendMessageToSet(&data, true);
 }
 
 void Spell::SendChannelUpdate(uint32 time)
@@ -4306,6 +4339,42 @@ SpellCastResult Spell::CheckCast(bool strict)
             {
                 if (m_caster->HasUnitState(UNIT_STATE_ROOT))
                     return SPELL_FAILED_ROOTED;
+
+                if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                    if (Unit* target = m_targets.getUnitTarget())
+                        if (!target->IsAlive())
+                            return SPELL_FAILED_BAD_TARGETS;
+
+                if (MMAP::MMapFactory::IsPathfindingEnabled(m_caster->GetMapId()))
+                {
+                    Unit* target = m_targets.getUnitTarget();
+
+                    if (!target)
+                        return SPELL_FAILED_BAD_TARGETS;
+
+                    Position pos;
+                    target->GetChargeContactPoint(m_caster, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+
+                    float maxdist = MELEE_RANGE + m_caster->GetMeleeReach() + target->GetMeleeReach();
+                    if (target->GetExactDistSq(&pos) > maxdist*maxdist)
+                        return SPELL_FAILED_NOPATH;
+
+                    if (m_caster->GetMapId() == 572) // pussywizard: 572 Ruins of Lordaeron
+                    {
+                        if (pos.GetPositionX() < 1275.0f || m_caster->GetPositionX() < 1275.0f) // special case (acid)
+                            break; // can't force path because the way is around and the path is too long
+                    }
+
+                    if (m_caster->GetTypeId() == TYPEID_PLAYER && m_caster->ToPlayer()->GetTransport())
+                        break;
+
+                    m_pathFinder = new PathInfo(m_caster);
+                    m_pathFinder->Update(pos.m_positionX, pos.m_positionY, pos.m_positionZ + 0.15f, false);
+                    G3D::Vector3 endPos = m_pathFinder->getEndPosition(); // also check distance between target and the point calculated by mmaps
+                    if (m_pathFinder->getPathType() & PATHFIND_NOPATH || target->GetExactDistSq(endPos.x, endPos.y, endPos.z) > maxdist*maxdist || m_pathFinder->getPathLength() > 45.0f)
+                        return SPELL_FAILED_NOPATH;
+                }
+                break;
 
                 break;
             }

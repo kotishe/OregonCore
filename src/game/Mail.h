@@ -135,6 +135,7 @@ class MailDraft
         {}
         MailDraft(std::string subject, uint32 itemTextId = 0)
             : m_mailTemplateId(0), m_mailTemplateItemsNeed(false), m_subject(subject), m_bodyId(itemTextId), m_money(0), m_COD(0) {}
+        MailDraft(std::string subject, std::string text);
     public:                                                 // Accessors
         uint16 GetMailTemplateId() const
         {

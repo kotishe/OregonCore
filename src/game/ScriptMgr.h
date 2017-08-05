@@ -55,7 +55,7 @@ struct Script
         pQuestSelect(NULL), pQuestComplete(NULL), pNPCDialogStatus(NULL), pGODialogStatus(NULL),
         pChooseReward(NULL), pItemHello(NULL), pGOHello(NULL), pAreaTrigger(NULL), pItemQuestAccept(NULL),
         pGOQuestAccept(NULL), pGOChooseReward(NULL), pGOSelect(NULL), pGOSelectWithCode(NULL), pItemUse(NULL), pEffectDummyCreature(NULL),
-        GetAI(NULL), GetInstanceData(NULL)
+        pEffectDummyGO(NULL), pEffectDummyItem(NULL), GetAI(NULL), GetInstanceData(NULL)
     {}
 
     std::string Name;
@@ -96,6 +96,8 @@ struct Script
     bool (*pGOChooseReward      )(Player*, GameObject*, Quest const*, uint32);
     bool (*pItemUse             )(Player*, Item*, SpellCastTargets const&);
     bool (*pEffectDummyCreature )(Unit*, uint32, uint32, Creature*);
+    bool(*pEffectDummyGO)(Unit*, uint32, uint32, GameObject*);
+    bool(*pEffectDummyItem)(Unit*, uint32, uint32, Item*);
 
     CreatureAI* (*GetAI)(Creature*);
     InstanceData* (*GetInstanceData)(Map*);
@@ -149,6 +151,8 @@ class ScriptMgr
         CreatureAI* GetAI(Creature* pCreature);
         bool ItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& targets);
         bool EffectDummyCreature(Unit* caster, uint32 spellId, uint32 effIndex, Creature* crTarget);
+        bool EffectDummyGO(Unit* caster, uint32 spellId, uint32 effIndex, GameObject* crTarget);
+        bool EffectDummyItem(Unit* caster, uint32 spellId, uint32 effIndex, Item* crTarget);
         InstanceData* CreateInstanceData(Map* map);
 };
 

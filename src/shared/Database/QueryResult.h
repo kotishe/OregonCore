@@ -56,6 +56,13 @@ class QueryResult
             err += "in field list!";
             throw std::invalid_argument(err);
         }
+        const char* GetFieldName(size_t i)
+        {
+            if (i < mFieldCount)
+                return mFields[i].name;
+
+            return "No column named";
+        }
 
     protected:
         Field* mCurrentRow;

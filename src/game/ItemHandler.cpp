@@ -441,15 +441,17 @@ void WorldSession::HandleReadItem(WorldPacket& recv_data)
         if (msg == EQUIP_ERR_OK)
         {
             data.Initialize (SMSG_READ_ITEM_OK, 8);
+            data << ObjectGuid(pItem->GetObjectGUID());
             sLog.outDetail("STORAGE: Item page sent");
         }
         else
         {
-            data.Initialize(SMSG_READ_ITEM_FAILED, 8);
+            data.Initialize(SMSG_READ_ITEM_FAILED, 8 + 1);
+            data << ObjectGuid(pItem->GetObjectGUID());
+            data << uint32(0);
             sLog.outDetail("STORAGE: Unable to read item");
             _player->SendEquipError(msg, pItem, NULL);
         }
-        data << pItem->GetGUID();
         SendPacket(&data);
     }
     else

@@ -25,7 +25,10 @@ class DBCStorage
 {
         typedef std::list<char*> StringPoolList;
     public:
-        explicit DBCStorage(const char* f) : fmt(f), nCount(0), fieldCount(0), indexTable(NULL), m_dataTable(NULL) { }
+        explicit DBCStorage(const char* f) : fmt(f), nCount(0), fieldCount(0), indexTable(NULL), m_dataTable(NULL), loaded(false)
+        {
+            data.clear();
+        }
         ~DBCStorage()
         {
             Clear();
@@ -33,11 +36,17 @@ class DBCStorage
 
         T const* LookupEntry(uint32 id) const
         {
+            if (loaded)
+            {
+                typename std::map<uint32, T const*>::const_iterator it = data.find(id);
+                if (it != data.end())
+                    return it->second;
+            }
             return (id >= nCount) ? NULL : indexTable[id];
         }
         uint32  GetNumRows() const
         {
-            return nCount;
+            return loaded ? data.size() : nCount;
         }
         char const* GetFormat() const
         {
@@ -64,6 +73,22 @@ class DBCStorage
             return indexTable != NULL;
         }
 
+        void SetEntry(uint32 id, T* t) // Cryptic they say..
+        {
+            if (!loaded)
+            {
+                for (uint32 i = 0; i < nCount; ++i)
+                {
+                    T const* node = LookupEntry(i);
+                    if (!node)
+                        continue;
+                    data[i] = node;
+                }
+                loaded = true;
+            }
+            data[id] = t;
+        }
+
         bool LoadStringsFrom(char const* fn)
         {
             // DBC must be already loaded using Load
@@ -82,6 +107,12 @@ class DBCStorage
 
         void Clear()
         {
+            if (loaded)
+            {
+                data.clear();
+                loaded = false;
+            }
+
             if (!indexTable)
                 return;
 
@@ -104,6 +135,8 @@ class DBCStorage
         uint32 fieldCount;
         T** indexTable;
         T* m_dataTable;
+        std::map<uint32, T const*> data;
+        bool loaded;
         StringPoolList m_stringPoolList;
 };
 

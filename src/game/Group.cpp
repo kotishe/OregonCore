@@ -30,6 +30,7 @@
 #include "InstanceSaveMgr.h"
 #include "Util.h"
 #include "ScriptMgr.h"
+#include "LuaEngine.h"
 
 Group::Group()
 {
@@ -123,7 +124,10 @@ bool Group::Create(const uint64& guid, const char* name)
     if (!isBGGroup()) CharacterDatabase.CommitTransaction();
 
     sScriptMgr.OnGroupCreated(leader->GetGroup(), leader);
-    
+   
+    // used by eluna
+    sEluna->OnCreate(this, m_leaderGuid, m_groupType);
+
     return true;
 }
 
@@ -230,6 +234,9 @@ bool Group::AddInvite(Player* player, bool isLeader)
     if (!isLeader)
         sScriptMgr.OnGroupPlayerInvited(this, player);
 
+    // used by eluna
+    sEluna->OnInviteMember(this, player->GetGUID());
+
     return true;
 }
 
@@ -303,6 +310,9 @@ bool Group::AddMember(const uint64& guid, const char* name)
         }
         player->SetGroupUpdateFlag(GROUP_UPDATE_FULL);
         UpdatePlayerOutOfRange(player);
+
+        // used by eluna
+        sEluna->OnAddMember(this, player->GetGUID());
     }
 
     return true;
@@ -356,7 +366,9 @@ uint32 Group::RemoveMember(const uint64& guid, const RemoveMethod& method /* = G
     else
         Disband(true);
 
-    
+    // used by eluna
+    sEluna->OnRemoveMember(this, guid, method); // Kicker and Reason not a part of Mangos, implement?
+   
     return m_memberSlots.size();
 }
 
@@ -373,6 +385,9 @@ void Group::ChangeLeader(const uint64& guid)
 
     if (oldLeader && newLeader)
         sScriptMgr.OnGroupLeaderChanged(this, oldLeader, newLeader);
+
+    // used by eluna
+    sEluna->OnChangeLeader(this, newLeader->GetGUID(), oldLeader->GetGUID());
 
     WorldPacket data(SMSG_GROUP_SET_LEADER, slot->name.size() + 1);
     data << slot->name;
@@ -441,6 +456,9 @@ void Group::Disband(bool hideDestroy)
         CharacterDatabase.CommitTransaction();
         ResetInstances(INSTANCE_RESET_GROUP_DISBAND, NULL);
     }
+
+    // used by eluna
+    sEluna->OnDisband(this);
 
     m_leaderGuid = 0;
     m_leaderName = "";

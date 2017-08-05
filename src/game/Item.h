@@ -234,6 +234,8 @@ class Item : public Object
         {
             return GetUInt32Value(ITEM_FIELD_MAXDURABILITY) > 0 && GetUInt32Value(ITEM_FIELD_DURABILITY) == 0;
         }
+        bool IsCurrencyToken() const { return GetProto()->IsCurrencyToken(); }
+        bool IsNotEmptyBag() const;
         bool CanBeTraded() const;
         void SetInTrade(bool b = true)
         {
@@ -243,6 +245,11 @@ class Item : public Object
         {
             return mb_in_trade;
         }
+
+        bool IsPotion() const { return GetProto()->IsPotion(); }
+        bool IsConjuredConsumable() const { return GetProto()->IsConjuredConsumable(); }
+        bool IsWeaponVellum() const { return GetProto()->IsWeaponVellum(); }
+        bool IsArmorVellum() const { return GetProto()->IsArmorVellum(); }
 
         bool IsFitToSpellRequirements(SpellEntry const* spellInfo) const;
         bool IsLimitedToAnotherMapOrZone(uint32 cur_mapId, uint32 cur_zoneId) const;

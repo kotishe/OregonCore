@@ -21,6 +21,7 @@
 #include "GridDefines.h"
 #include "SpellMgr.h"
 #include "SharedDefines.h"
+#include "PathFinder.h"
 
 static const uint32 MAX_SPELL_ID = 53085;
 
@@ -323,6 +324,7 @@ class Spell
         void EffectSelfResurrect(SpellEffIndex effIndex);
         void EffectSkinning(SpellEffIndex effIndex);
         void EffectCharge(SpellEffIndex effIndex);
+        void EffectChargeDest(SpellEffIndex effIndex);
         void EffectProspecting(SpellEffIndex effIndex);
         void EffectSendTaxi(SpellEffIndex effIndex);
         void EffectSummonCritter(SpellEffIndex effIndex);
@@ -425,7 +427,7 @@ class Spell
         void SendSpellGo();
         void SendSpellCooldown();
         void SendLogExecute();
-        void SendInterrupted(uint8 result);
+        void SendInterrupted(SpellCastResult result);
         void SendChannelUpdate(uint32 time);
         void SendChannelStart(uint32 duration);
         void SendResurrectRequest(Player* target);
@@ -441,6 +443,8 @@ class Spell
         uint64 m_castItemGUID;
         uint8 m_cast_count;
         SpellCastTargets m_targets;
+
+        PathInfo* m_pathFinder;
 
         int32 GetCastTime() const
         {

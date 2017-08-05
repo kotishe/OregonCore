@@ -1,0 +1,3 @@
+-- Add missing gossip text for Remy "Two Times"
+REPLACE INTO `npc_text` VALUES (6157,'Hey there, friend. My name\'s Remy. I\'m from Redridge to the east, and came here looking for business, looking for business. You got any...got any??','',0,1,0,0,0,0,0,0,'','',0,0,0,0,0,0,0,0,'','',0,0,0,0,0,0,0,0,'','',0,0,0,0,0,0,0,0,'','',0,0,0,0,0,0,0,0,'','',0,0,0,0,0,0,0,0,'','',0,0,0,0,0,0,0,0,'','',0,0,0,0,0,0,0,0);
+REPLACE INTO `npc_gossip` VALUES (80326, 6157);

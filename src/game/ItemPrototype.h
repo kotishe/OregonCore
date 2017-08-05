@@ -625,6 +625,14 @@ struct ItemTemplate
     {
         return (Stackable == 2147483647 || Stackable <= 0) ? uint32(0x7FFFFFFF - 1) : uint32(Stackable);
     }
+	
+
+    bool IsCurrencyToken() const { return BagFamily & BAG_FAMILY_MASK_CURRENCY_TOKENS; }
+    bool IsPotion() const { return Class == ITEM_CLASS_CONSUMABLE && SubClass == ITEM_SUBCLASS_POTION; }
+    bool IsConjuredConsumable() const { return Class == ITEM_CLASS_CONSUMABLE && (Flags & ITEM_PROTO_FLAG_CONJURED); }
+
+    bool IsWeaponVellum() const { return Class == ITEM_CLASS_TRADE_GOODS; }
+    bool IsArmorVellum() const { return Class == ITEM_CLASS_TRADE_GOODS; }
 };
 
 struct ItemLocale

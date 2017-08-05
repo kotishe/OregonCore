@@ -118,6 +118,7 @@ class TempSummon;
 class CreatureAI;
 class ZoneScript;
 class Unit;
+class ElunaEventProcessor;
 
 typedef UNORDERED_MAP<Player*, UpdateData> UpdateDataMapType;
 
@@ -264,6 +265,7 @@ class Object
 
         void SetInt32Value( uint16 index,        int32  value);
         void SetUInt32Value(uint16 index,       uint32  value);
+        void UpdateUInt32Value(uint16 index, uint32 value);
         void SetUInt64Value(uint16 index, const uint64& value);
         void SetFloatValue( uint16 index,       float   value);
         void SetByteValue(  uint16 index, uint8 offset, uint8 value);
@@ -630,7 +632,7 @@ class WorldObject : public Object, public WorldLocation
     public:
         ~WorldObject() override;
 
-        virtual void Update (uint32 /*time_diff*/) { }
+        virtual void Update(uint32 /*time_diff*/);
 
         void _Create(uint32 guidlow, HighGuid guidhigh);
         virtual void RemoveFromWorld() override;
@@ -654,6 +656,8 @@ class WorldObject : public Object, public WorldLocation
             // angle to face `obj` to `this` using distance includes size of `obj`
             GetNearPoint(obj, x, y, z, obj->GetObjectSize(), distance2d, GetAngle(obj));
         }
+
+        void GetChargeContactPoint(const WorldObject* obj, float& x, float& y, float& z, float distance2d = CONTACT_DISTANCE) const;
 
         virtual float GetObjectBoundingRadius() const
         {
@@ -776,6 +780,7 @@ class WorldObject : public Object, public WorldLocation
 
         virtual void SendMessageToSet(WorldPacket *data, bool self) { SendMessageToSetInRange(data, GetVisibilityRange(), self); }
         virtual void SendMessageToSetInRange(WorldPacket* data, float dist, bool self);
+        void SendMessageToSetExcept(WorldPacket* data, Player const* skipped_receiver);
 
         virtual uint8 getLevelForTarget(WorldObject const* /*target*/) const { return 1; }
 
@@ -914,6 +919,7 @@ class WorldObject : public Object, public WorldLocation
 
         MovementInfo m_movementInfo;
 
+        ElunaEventProcessor* elunaEvents;
     protected:
         explicit WorldObject(bool isWorldObject); //note: here it means if it is in grid object list or world object list
         std::string m_name;
