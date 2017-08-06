@@ -242,39 +242,6 @@ inline bool IsSpellEffectTriggerSpell(const SpellEntry* entry, SpellEffIndex eff
     return false;
 }
 
-inline bool IsSpellEffectAbleToCrit(const SpellEntry* entry, SpellEffIndex index)
-{
-    if (!entry || entry->HasAttribute(SPELL_ATTR2_CANT_CRIT))
-        return false;
-
-    switch (entry->Effect[index])
-    {
-        case SPELL_EFFECT_SCHOOL_DAMAGE:
-        case SPELL_EFFECT_HEAL:
-        case SPELL_EFFECT_WEAPON_DAMAGE_NOSCHOOL:
-        case SPELL_EFFECT_WEAPON_PERCENT_DAMAGE:
-        case SPELL_EFFECT_WEAPON_DAMAGE:
-        case SPELL_EFFECT_NORMALIZED_WEAPON_DMG:
-            return true;
-        case SPELL_EFFECT_ENERGIZE: // Mana Potion and similar spells, Lay on hands
-            return (entry->SpellFamilyName && entry->DmgClass);
-    }
-    return false;
-}
-
-inline bool IsSpellAbleToCrit(const SpellEntry* entry)
-{
-    if (!entry || entry->HasAttribute(SPELL_ATTR2_CANT_CRIT))
-        return false;
-
-    for (uint32 i = EFFECT_0; i < MAX_SPELL_EFFECTS; ++i)
-    {
-        if (entry->Effect[i] && IsSpellEffectAbleToCrit(entry, SpellEffIndex(i)))
-            return true;
-    }
-    return false;
-}
-
 inline bool IsSpellRemoveAllMovementAndControlLossEffects(SpellEntry const* spellProto)
 {
     return spellProto->EffectApplyAuraName[EFFECT_0] == SPELL_AURA_MECHANIC_IMMUNITY &&
@@ -394,7 +361,6 @@ inline bool IsBinarySpell(SpellEntry const* spellInfo)
             }
         }
     }
-    return false;
 }
 
 bool IsAuraAddedBySpell(uint32 auraType, uint32 spellId);
