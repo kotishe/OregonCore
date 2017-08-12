@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS `quest_greeting` (
 DELETE FROM `npc_text` WHERE `ID` BETWEEN 198 AND 225;
 DELETE FROM `npc_gossip` WHERE `textid` BETWEEN 198 AND 225;
 DELETE FROM `npc_text` WHERE `ID` = 1244;
-DELETE FROM `npc_gossip` WHERE `ID` = 1244;
+DELETE FROM `npc_gossip` WHERE `textid` = 1244;
 DELETE FROM `npc_text` WHERE `ID` = 6157;
-DELETE FROM `npc_gossip` WHERE `ID` = 6157;
+DELETE FROM `npc_gossip` WHERE `textid` = 6157;
 
 -- Remove Gossip flag from Wharfmaster Dizzywig
 UPDATE `creature_template` SET npcflag = 2 WHERE entry = 3453;
