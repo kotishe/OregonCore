@@ -375,6 +375,15 @@ struct OregonStringLocale
     std::vector<std::string> Content;                       // 0 -> default, i -> i-1 locale index
 };
 
+struct QuestGreetingLocale
+{
+    QuestGreetingLocale() : Emote(0), EmoteDelay(0) { }
+
+    std::vector<std::string> Content;                       // 0 -> default, i -> i-1 locale index
+    uint16 Emote;
+    uint32 EmoteDelay;
+};
+
 typedef std::map<uint32, uint32> CreatureLinkedRespawnMap;
 typedef UNORDERED_MAP<uint32, CreatureData> CreatureDataMap;
 typedef UNORDERED_MAP<uint32, GameObjectData> GameObjectDataMap;
@@ -385,6 +394,7 @@ typedef UNORDERED_MAP<uint32, QuestLocale> QuestLocaleMap;
 typedef UNORDERED_MAP<uint32, NpcTextLocale> NpcTextLocaleMap;
 typedef UNORDERED_MAP<uint32, PageTextLocale> PageTextLocaleMap;
 typedef UNORDERED_MAP<uint32, OregonStringLocale> OregonStringLocaleMap;
+typedef UNORDERED_MAP<uint32, QuestGreetingLocale> QuestGreetingLocaleMap;
 typedef UNORDERED_MAP<uint32, GossipMenuItemsLocale> GossipMenuItemsLocaleMap;
 
 typedef std::multimap<uint32, uint32> QuestRelations;
@@ -810,6 +820,7 @@ class ObjectMgr
             return LoadOregonStrings(WorldDatabase, "oregon_string", MIN_OREGON_STRING_ID, MAX_OREGON_STRING_ID);
         }
         void LoadDbScriptStrings();
+        bool LoadQuestGreetings();
         void LoadPetCreateSpells();
         void LoadCreatureLocales();
         void LoadCreatureTemplates();
@@ -1025,6 +1036,13 @@ class ObjectMgr
         void SetDBCLocaleIndex(uint32 lang)
         {
             DBCLocaleIndex = GetIndexForLocale(LocaleConstant(lang));
+        }
+
+        QuestGreetingLocale const* GetQuestGreetingLocale(int32 entry) const
+        {
+            auto itr = mQuestGreetingLocaleMap.find(entry);
+            if (itr == mQuestGreetingLocaleMap.end()) return nullptr;
+            return &itr->second;
         }
 
         void AddCorpseCellData(uint32 mapid, uint32 cellid, uint32 player_guid, uint32 instance);
@@ -1267,6 +1285,7 @@ class ObjectMgr
         NpcTextLocaleMap mNpcTextLocaleMap;
         PageTextLocaleMap mPageTextLocaleMap;
         OregonStringLocaleMap mOregonStringLocaleMap;
+        QuestGreetingLocaleMap mQuestGreetingLocaleMap;
         GossipMenuItemsLocaleMap mGossipMenuItemsLocaleMap;
         RespawnTimes mCreatureRespawnTimes;
         RespawnTimes mGORespawnTimes;
