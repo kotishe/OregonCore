@@ -1381,6 +1381,9 @@ void World::SetInitialWorldSettings()
     sConsole.SetLoadingLabel("Loading Quest Pooling Data...");
     sPoolMgr.LoadQuestPools();
 
+    sConsole.SetLoadingLabel("Loading Quests Greetings...");          // must be loaded after creature_template
+    sObjectMgr.LoadQuestGreetings();
+
     sConsole.SetLoadingLabel("Loading Game Event Data...");           // must be after loading pools fully
     sGameEventMgr.LoadFromDB();
 

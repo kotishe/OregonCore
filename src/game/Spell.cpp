@@ -4006,6 +4006,9 @@ SpellCastResult Spell::CheckCast(bool strict)
             if (mapEntry->IsBattleArena())
                 return SPELL_FAILED_NOT_IN_ARENA;
 
+    if (m_spellInfo->MaxTargetLevel && target->getLevel() > m_spellInfo->MaxTargetLevel)
+        return SPELL_FAILED_HIGHLEVEL;
+
     // zone check, can only be case in specific zones
     if (!IsSpellAllowedInLocation(m_spellInfo, m_caster->GetMapId(), m_caster->GetZoneId(), m_caster->GetAreaId()))
         return SPELL_FAILED_REQUIRES_AREA;

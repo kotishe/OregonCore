@@ -345,13 +345,30 @@ void QuestMenu::ClearMenu()
     m_qItems.clear();
 }
 
-void PlayerMenu::SendQuestGiverQuestList(QEmote eEmote, const std::string& Title, uint64 npcGUID)
+void PlayerMenu::SendQuestGiverQuestList(QEmote eEmote, const std::string& Title, ObjectGuid npcGUID)
 {
     WorldPacket data(SMSG_QUESTGIVER_QUEST_LIST, 100);    // guess size
     data << uint64(npcGUID);
-    data << Title;
-    data << uint32(eEmote._Delay);                         // player emote
-    data << uint32(eEmote._Emote);                         // NPC emote
+
+    if (QuestGreetingLocale const *questGreeting = sObjectMgr.GetQuestGreetingLocale(npcGUID.GetEntry()))
+    {
+        int locale_idx = pSession->GetSessionDbLocaleIndex();
+
+        if ((int32)questGreeting->Content.size() > locale_idx + 1 && !questGreeting->Content[locale_idx + 1].empty())
+            data << questGreeting->Content[locale_idx + 1];
+        else
+            data << questGreeting->Content[0];
+
+        data << uint32(questGreeting->EmoteDelay);
+        data << uint32(questGreeting->Emote);
+    }
+    else
+    {
+        data << Title;
+        data << uint32(eEmote._Delay);                          // player emote
+        data << uint32(eEmote._Emote);                          // NPC emote
+    }
+
     data << uint8 (mQuestMenu.MenuItemCount());
 
     // Store this instead of checking the Singleton every loop iteration

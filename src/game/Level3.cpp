@@ -700,6 +700,14 @@ bool ChatHandler::HandleReloadQuestTemplateCommand(const char*)
     return true;
 }
 
+bool ChatHandler::HandleReloadQuestGreetingCommand(const char*)
+{
+    sLog.outString("Re-Loading Quest Greetings...");
+    sObjectMgr.LoadQuestGreetings();
+    SendGlobalGMSysMessage("DB table quest_greeting reloaded.");
+    return true;
+}
+
 bool ChatHandler::HandleReloadLootTemplatesCreatureCommand(const char*)
 {
     sLog.outString("Re-Loading Loot Tables... (creature_loot_template)");

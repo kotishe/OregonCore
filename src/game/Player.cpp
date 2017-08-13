@@ -5368,6 +5368,9 @@ bool Player::UpdateGatherSkill(uint32 SkillId, uint32 SkillValue, uint32 RedLeve
 
     uint32 gathering_skill_gain = sWorld.getConfig(CONFIG_SKILL_GAIN_GATHERING);
 
+    if (RedLevel == 1) // stuff that starts at 1 should stop at 105 not 101
+        RedLevel = 5;
+
     // For skinning and Mining chance decrease with level. 1-74 - no decrease, 75-149 - 2 times, 225-299 - 8 times
     switch (SkillId)
     {
@@ -20244,9 +20247,9 @@ void Player::ResurectUsingRequestData()
     /// Teleport before resurrecting by player, otherwise the player might get attacked from creatures near his corpse
     TeleportTo(m_resurrectMap, m_resurrectX, m_resurrectY, m_resurrectZ, GetOrientation());
 
-    //we cannot resurrect player when we triggered far teleport
-    //player will be resurrected upon teleportation
-    if (IsBeingTeleportedFar())
+    //we cannot resurrect player when we triggered any kind of teleport
+    //player will be resurrected upon teleportation (in MSG_MOVE_TELEPORT_ACK handler)
+    if (IsBeingTeleported())
     {
         ScheduleDelayedOperation(DELAYED_RESURRECT_PLAYER);
         return;

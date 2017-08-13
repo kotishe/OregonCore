@@ -273,7 +273,7 @@ class PlayerMenu
         /*********************************************************/
         void SendQuestGiverStatus(uint8 questStatus, uint64 npcGUID);
 
-        void SendQuestGiverQuestList(QEmote eEmote, const std::string& Title, uint64 npcGUID);
+        void SendQuestGiverQuestList(QEmote eEmote, const std::string& Title, ObjectGuid npcGUID);
 
         void SendQuestQueryResponse (Quest const* pQuest);
         void SendQuestGiverQuestDetails(Quest const* pQuest, uint64 npcGUID, bool ActivateAccept);
