@@ -6379,6 +6379,12 @@ bool Unit::HandleProcTriggerSpell(Unit* victim, uint32 damage, Aura* triggeredBy
                     basepoints0 = damage * triggerAmount / 100 / 3;
                     target = this;
                 }
+                // Blackout
+                else if (auraSpellInfo->SpellIconID == 173)
+                {
+                    if (!victim || !victim->IsAlive() || victim == this || procSpell == nullptr)
+                        return false;
+                }
                 break;
             }
         case SPELLFAMILY_DRUID:
