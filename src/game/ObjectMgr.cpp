@@ -4609,16 +4609,14 @@ void ObjectMgr::LoadGossipText()
     GossipText* pGText;
     QueryResult_AutoPtr result = WorldDatabase.Query("SELECT * FROM npc_text");
 
-    int count = 0;
     if (!result)
     {
-
-        sLog.outString(">> Loaded %u npc texts", count);
+        sLog.outString(">> Loaded 0 npc texts, table is empty!");
         return;
     }
 
-    int cic;
-
+    uint32 count = 0;
+    uint8 cic;
 
     do
     {
@@ -4627,11 +4625,10 @@ void ObjectMgr::LoadGossipText()
 
         Field* fields = result->Fetch();
 
-
         pGText = new GossipText;
         pGText->Text_ID    = fields[cic++].GetUInt32();
 
-        for (int i = 0; i < 8; i++)
+        for (uint8 i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; ++i)
         {
             pGText->Options[i].Text_0           = fields[cic++].GetCppString();
             pGText->Options[i].Text_1           = fields[cic++].GetCppString();
@@ -4639,14 +4636,11 @@ void ObjectMgr::LoadGossipText()
             pGText->Options[i].Language         = fields[cic++].GetUInt32();
             pGText->Options[i].Probability      = fields[cic++].GetFloat();
 
-            pGText->Options[i].Emotes[0]._Delay  = fields[cic++].GetUInt32();
-            pGText->Options[i].Emotes[0]._Emote  = fields[cic++].GetUInt32();
-
-            pGText->Options[i].Emotes[1]._Delay  = fields[cic++].GetUInt32();
-            pGText->Options[i].Emotes[1]._Emote  = fields[cic++].GetUInt32();
-
-            pGText->Options[i].Emotes[2]._Delay  = fields[cic++].GetUInt32();
-            pGText->Options[i].Emotes[2]._Emote  = fields[cic++].GetUInt32();
+            for (uint8 j = 0; j < MAX_GOSSIP_TEXT_EMOTES; ++j)
+            {
+                pGText->Options[i].Emotes[j]._Delay = fields[cic++].GetUInt32();
+                pGText->Options[i].Emotes[j]._Emote = fields[cic++].GetUInt32();
+            }
         }
 
         if (!pGText->Text_ID)
@@ -4680,8 +4674,6 @@ void ObjectMgr::LoadNpcTextLocales()
 
     if (!result)
     {
-
-
         sLog.outString(">> Loaded 0 Quest locale strings. DB table locales_npc_text is empty.");
         return;
     }
@@ -4828,11 +4820,9 @@ void ObjectMgr::LoadQuestAreaTriggers()
 
     if (!result)
     {
-
         sLog.outString(">> Loaded %u quest trigger points", count);
         return;
     }
-
 
     do
     {
@@ -4886,11 +4876,9 @@ void ObjectMgr::LoadTavernAreaTriggers()
 
     if (!result)
     {
-
         sLog.outString(">> Loaded %u tavern triggers", count);
         return;
     }
-
 
     do
     {
@@ -4923,11 +4911,9 @@ void ObjectMgr::LoadAreaTriggerScripts()
 
     if (!result)
     {
-
         sLog.outString(">> Loaded %u areatrigger scripts", count);
         return;
     }
-
 
     do
     {
@@ -5053,7 +5039,6 @@ void ObjectMgr::LoadGraveyardZones()
 
     if (!result)
     {
-
         sLog.outString(">> Loaded 0 graveyard-zone links. DB table `graveyard_zone` is empty.");
         return;
     }
