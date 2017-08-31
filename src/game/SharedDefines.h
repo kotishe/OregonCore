@@ -2813,6 +2813,14 @@ enum DungeonStatusFlag
     RAID_STATUSFLAG_25MAN = 0x08,
 };
 
+enum DiminishingLevels
+{
+    DIMINISHING_LEVEL_1             = 0,
+    DIMINISHING_LEVEL_2             = 1,
+    DIMINISHING_LEVEL_3             = 2,
+    DIMINISHING_LEVEL_IMMUNE        = 3
+};
+
 // we need to stick to 1 version or half of the stuff will work for someone
 // others will not and opposite
 // will only support WoW and WoW:TBC 2.4.3 client build 8606...
