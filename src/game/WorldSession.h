@@ -262,10 +262,9 @@ class WorldSession
             else
                 m_timeOutTime -= diff;
         }
-        void ResetTimeOutTime()
-        {
-            m_timeOutTime = sWorld.getConfig(CONFIG_SOCKET_TIMEOUTTIME);
-        }
+
+        void ResetTimeOutTime(bool onlyActive);
+
         bool IsConnectionIdle() const
         {
             if (m_timeOutTime <= 0 && !m_inQueue)

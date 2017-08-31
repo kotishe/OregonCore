@@ -48,7 +48,7 @@ WorldSession::WorldSession(uint32 id, WorldSocket* sock, uint32 sec, uint8 expan
     {
         m_Address = sock->GetRemoteAddress();
         sock->AddReference();
-        ResetTimeOutTime();
+        ResetTimeOutTime(false);
         LoginDatabase.PExecute("UPDATE account SET online = 1 WHERE id = %u;", GetAccountId());
     }
 }
@@ -175,7 +175,8 @@ bool WorldSession::Update(uint32 diff)
     UpdateTimeOutTime(diff);
 
     ///- Before we process anything:
-    /// If necessary, kick the player from the character select screen
+    /// If necessary, kick the the player because the client didn't send anything for too long
+    /// (or they've been idling in character select)
     if (IsConnectionIdle())
         m_Socket->CloseSocket();
 
@@ -546,6 +547,14 @@ void WorldSession::SendNotification(int32 string_id, ...)
 const char* WorldSession::GetOregonString(int32 entry) const
 {
     return sObjectMgr.GetOregonString(entry, GetSessionDbLocaleIndex());
+}
+
+void WorldSession::ResetTimeOutTime(bool onlyActive)
+{
+    if (GetPlayer())
+        m_timeOutTime = sWorld.getConfig(CONFIG_SOCKET_TIMEOUTTIME_ACTIVE);
+    else if (!onlyActive)
+        m_timeOutTime = sWorld.getConfig(CONFIG_SOCKET_TIMEOUTTIME);
 }
 
 void WorldSession::Handle_NULL(WorldPacket& recvPacket)

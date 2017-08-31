@@ -607,19 +607,23 @@ int WorldSocket::ProcessIncoming (WorldPacket* new_pct)
 
             return HandleAuthSession (*new_pct);
         case CMSG_KEEP_ALIVE:
-            DEBUG_LOG ("CMSG_KEEP_ALIVE ,size: %lu", new_pct->size());
+        {
+            ACE_GUARD_RETURN(LockType, Guard, m_SessionLock, -1);
+            DEBUG_LOG("CMSG_KEEP_ALIVE ,size: %lu", new_pct->size());
+            if (m_Session)
+                m_Session->ResetTimeOutTime(true);
 
             sEluna->OnPacketReceive(m_Session, *new_pct);
             return 0;
+        }
         default:
             {
                 ACE_GUARD_RETURN (LockType, Guard, m_SessionLock, -1);
 
                 if (m_Session != NULL)
                 {
-                    // Our Idle timer will reset on any non PING opcodes.
-                    // Catches people idling on the login screen and any lingering ingame connections.
-                    m_Session->ResetTimeOutTime();
+                    // Our idle timer will reset on any non PING opcodes on login screen, allowing us to catch people idling.
+                    m_Session->ResetTimeOutTime(false);
 
                     // OK ,give the packet to WorldSession
                     aptr.release();
