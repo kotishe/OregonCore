@@ -7235,15 +7235,12 @@ void ObjectMgr::LoadVendors()
 
     std::set<uint32> skip_vendors;
 
-    QueryResult_AutoPtr result = WorldDatabase.Query("SELECT entry, item, maxcount, incrtime, ExtendedCost FROM npc_vendor");
+    QueryResult_AutoPtr result = WorldDatabase.Query("SELECT entry, item, maxcount, incrtime, ExtendedCost FROM npc_vendor ORDER BY slot");
     if (!result)
     {
-
-
         sLog.outErrorDb(">> Loaded npc_vendor, table is empty!");
         return;
     }
-
 
     uint32 count = 0;
     do
@@ -7278,12 +7275,9 @@ void ObjectMgr::LoadNpcTextId()
     QueryResult_AutoPtr result = WorldDatabase.Query("SELECT npc_guid, textid FROM npc_gossip");
     if (!result)
     {
-
-
         sLog.outErrorDb(">> Loaded npc_gossip, table is empty!");
         return;
     }
-
 
     uint32 count = 0;
     uint32 guid, textid;
