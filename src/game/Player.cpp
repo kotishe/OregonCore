@@ -13313,19 +13313,6 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
 
     RemoveTimedQuest(quest_id);
 
-    if (pQuest->GetRewChoiceItemsCount() > 0)
-    {
-        if (uint32 itemId = pQuest->RewChoiceItemId[reward])
-        {
-            ItemPosCountVec dest;
-            if (CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, pQuest->RewChoiceItemCount[reward]) == EQUIP_ERR_OK)
-            {
-                Item* item = StoreNewItem(dest, itemId, true);
-                SendNewItem(item, pQuest->RewChoiceItemCount[reward], true, false);
-            }
-        }
-    }
-
     if (pQuest->GetRewItemsCount() > 0)
     {
         for (uint32 i = 0; i < pQuest->GetRewItemsCount(); ++i)
@@ -13342,7 +13329,18 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
         }
     }
 
-    RewardReputation(pQuest);
+    if (pQuest->GetRewChoiceItemsCount() > 0)
+    {
+        if (uint32 itemId = pQuest->RewChoiceItemId[reward])
+        {
+            ItemPosCountVec dest;
+            if (CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, pQuest->RewChoiceItemCount[reward]) == EQUIP_ERR_OK)
+            {
+                Item* item = StoreNewItem(dest, itemId, true);
+                SendNewItem(item, pQuest->RewChoiceItemCount[reward], true, false);
+            }
+        }
+    }
 
     uint16 log_slot = FindQuestSlot(quest_id);
     if (log_slot < MAX_QUEST_LOG_SIZE)
@@ -13395,6 +13393,8 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
 
     if (announce)
         SendQuestReward(pQuest, XP, questGiver);
+
+    RewardReputation(pQuest);
 
     switch (questGiver->GetTypeId())
     {
