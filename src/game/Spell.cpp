@@ -3912,6 +3912,10 @@ SpellCastResult Spell::CheckCast(bool strict)
             if (strict && m_spellInfo->AttributesEx3 & SPELL_ATTR3_PLAYERS_ONLY && target->GetTypeId() != TYPEID_PLAYER && !IsAreaOfEffectSpell(m_spellInfo))
                 return SPELL_FAILED_BAD_TARGETS;
 
+            // check if target is affected by Spirit of Redemption (Aura: 27827)
+            if (target->HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
+                return SPELL_FAILED_BAD_TARGETS;
+
             bool isTrigger = (target->ToCreature() && target->ToCreature()->isTrigger());
             if (!isTrigger)
             {

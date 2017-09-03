@@ -5706,17 +5706,25 @@ void Aura::HandleSpiritOfRedemption(bool apply, bool Real)
     {
         if (m_target->GetTypeId() == TYPEID_PLAYER)
         {
+            // disable breath/etc timers
+            ((Player*)m_target)->StopMirrorTimers();
+
             // set stand state (expected in this form)
             if (!m_target->IsStandState())
                 m_target->SetStandState(UNIT_STAND_STATE_STAND);
-
-            // Interrupt currently casted spell
-            m_target->InterruptNonMeleeSpells(true);
         }
+
+        // interrupt casting when entering Spirit of Redemption
+        if (m_target->IsNonMeleeSpellCast(false))
+            m_target->InterruptNonMeleeSpells(false);
+
+        // set health and mana to maximum
+        m_target->SetHealth(m_target->GetMaxHealth());
+        m_target->SetPower(POWER_MANA, m_target->GetMaxPower(POWER_MANA));
     }
     // die at aura end
     else
-        m_target->setDeathState(JUST_DIED);
+        m_target->DealDamage(m_target, m_target->GetHealth(), nullptr, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, GetSpellProto(), false);
 }
 
 void Aura::CleanupTriggeredSpells()

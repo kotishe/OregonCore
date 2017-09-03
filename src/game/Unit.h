@@ -605,14 +605,6 @@ enum UnitTypeMask
     UNIT_MASK_CONTROLABLE_GUARDIAN  = 0x00000100
 };
 
-enum DiminishingLevels
-{
-    DIMINISHING_LEVEL_1             = 0,
-    DIMINISHING_LEVEL_2             = 1,
-    DIMINISHING_LEVEL_3             = 2,
-    DIMINISHING_LEVEL_IMMUNE        = 3
-};
-
 struct DiminishingReturn
 {
     DiminishingReturn(DiminishingGroup group, uint32 t, uint32 count) : DRGroup(group), hitTime(t), hitCount(count), stack(0) {}

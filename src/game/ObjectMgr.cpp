@@ -1027,6 +1027,25 @@ uint32 ObjectMgr::ChooseDisplayId(uint32 /*team*/, const CreatureInfo* cinfo, co
     return display_id;
 }
 
+void ObjectMgr::ChooseCreatureFlags(const CreatureInfo *cinfo, uint32& npcflag, uint32& unit_flags, uint32& dynamicflags, const CreatureData *data /*= NULL*/)
+{
+    npcflag = cinfo->npcflag;
+    unit_flags = cinfo->unit_flags;
+    dynamicflags = cinfo->dynamicflags;
+
+    if (data)
+    {
+        if (data->npcflag)
+            npcflag = data->npcflag;
+
+        if (data->unit_flags)
+            unit_flags = data->unit_flags;
+
+        if (data->dynamicflags)
+            dynamicflags = data->dynamicflags;
+    }
+}
+
 CreatureModelInfo const* ObjectMgr::GetCreatureModelRandomGender(uint32 display_id)
 {
     CreatureModelInfo const* minfo = GetCreatureModelInfo(display_id);
@@ -1247,7 +1266,9 @@ void ObjectMgr::LoadCreatures()
                                  //4             5           6           7           8            9              10         11
                                  "equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, spawndist, currentwaypoint,"
                                  //12        13       14            15         16     17
-                                 "curhealth, curmana, MovementType, spawnMask, event, pool_entry "
+                                 "curhealth, curmana, MovementType, spawnMask, event, pool_entry,"
+                                 //18               19                   20           
+                                 "creature.npcflag, creature.unit_flags, creature.dynamicflags "
                                  "FROM creature LEFT OUTER JOIN game_event_creature ON creature.guid = game_event_creature.guid "
                                  "LEFT OUTER JOIN pool_creature ON creature.guid = pool_creature.guid");
 
@@ -1300,6 +1321,9 @@ void ObjectMgr::LoadCreatures()
         data.spawnMask      = fields[15].GetUInt8();
         int16 gameEvent     = fields[16].GetInt16();
         int32 PoolId        = fields[17].GetInt32();
+        data.npcflag        = fields[18].GetUInt32();
+        data.unit_flags     = fields[19].GetUInt32();
+        data.dynamicflags   = fields[20].GetUInt32();
 
         MapEntry const* mapEntry = sMapStore.LookupEntry(data.mapid);
         if (!mapEntry)
@@ -1351,13 +1375,19 @@ void ObjectMgr::LoadCreatures()
             }
         }
 
+        if (data.npcflag & UNIT_NPC_FLAG_SPELLCLICK)
+        {
+            sLog.outErrorDb("Table `creature` have creature(GUID: %u Entry : %u) with npcflag UNIT_NPC_FLAG_SPELLCLICK(%u) set, it is expected to be set by code handling `npc_spellclick_spells` content.", guid, data.id, UNIT_NPC_FLAG_SPELLCLICK);
+            data.npcflag &= ~UNIT_NPC_FLAG_SPELLCLICK;
+        }
+
         // Add to grid if not managed by the game event or pool system
         if (gameEvent == 0 && PoolId == 0)
             AddCreatureToGrid(guid, &data);
     }
     while (result->NextRow());
 
-    sLog.outString(">> Loaded %lu creatures", mCreatureDataMap.size());
+    sLog.outString(">> Loaded %u creatures", (uint32)mCreatureDataMap.size());
 }
 
 void ObjectMgr::AddCreatureToGrid(uint32 guid, CreatureData const* data)
@@ -1459,6 +1489,9 @@ uint32 ObjectMgr::AddCreData(uint32 entry, uint32 /*team*/, uint32 mapId, float 
     data.movementType = cInfo->MovementType;
     data.spawnMask = 1;
     data.dbData = false;
+    data.npcflag = cInfo->npcflag;
+    data.unit_flags = cInfo->unit_flags;
+    data.dynamicflags = cInfo->dynamicflags;
 
     AddCreatureToGrid(guid, &data);
 
@@ -4609,16 +4642,14 @@ void ObjectMgr::LoadGossipText()
     GossipText* pGText;
     QueryResult_AutoPtr result = WorldDatabase.Query("SELECT * FROM npc_text");
 
-    int count = 0;
     if (!result)
     {
-
-        sLog.outString(">> Loaded %u npc texts", count);
+        sLog.outString(">> Loaded 0 npc texts, table is empty!");
         return;
     }
 
-    int cic;
-
+    uint32 count = 0;
+    uint8 cic;
 
     do
     {
@@ -4627,11 +4658,10 @@ void ObjectMgr::LoadGossipText()
 
         Field* fields = result->Fetch();
 
-
         pGText = new GossipText;
         pGText->Text_ID    = fields[cic++].GetUInt32();
 
-        for (int i = 0; i < 8; i++)
+        for (uint8 i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; ++i)
         {
             pGText->Options[i].Text_0           = fields[cic++].GetCppString();
             pGText->Options[i].Text_1           = fields[cic++].GetCppString();
@@ -4639,14 +4669,11 @@ void ObjectMgr::LoadGossipText()
             pGText->Options[i].Language         = fields[cic++].GetUInt32();
             pGText->Options[i].Probability      = fields[cic++].GetFloat();
 
-            pGText->Options[i].Emotes[0]._Delay  = fields[cic++].GetUInt32();
-            pGText->Options[i].Emotes[0]._Emote  = fields[cic++].GetUInt32();
-
-            pGText->Options[i].Emotes[1]._Delay  = fields[cic++].GetUInt32();
-            pGText->Options[i].Emotes[1]._Emote  = fields[cic++].GetUInt32();
-
-            pGText->Options[i].Emotes[2]._Delay  = fields[cic++].GetUInt32();
-            pGText->Options[i].Emotes[2]._Emote  = fields[cic++].GetUInt32();
+            for (uint8 j = 0; j < MAX_GOSSIP_TEXT_EMOTES; ++j)
+            {
+                pGText->Options[i].Emotes[j]._Delay = fields[cic++].GetUInt32();
+                pGText->Options[i].Emotes[j]._Emote = fields[cic++].GetUInt32();
+            }
         }
 
         if (!pGText->Text_ID)
@@ -4680,8 +4707,6 @@ void ObjectMgr::LoadNpcTextLocales()
 
     if (!result)
     {
-
-
         sLog.outString(">> Loaded 0 Quest locale strings. DB table locales_npc_text is empty.");
         return;
     }
@@ -4828,11 +4853,9 @@ void ObjectMgr::LoadQuestAreaTriggers()
 
     if (!result)
     {
-
         sLog.outString(">> Loaded %u quest trigger points", count);
         return;
     }
-
 
     do
     {
@@ -4886,11 +4909,9 @@ void ObjectMgr::LoadTavernAreaTriggers()
 
     if (!result)
     {
-
         sLog.outString(">> Loaded %u tavern triggers", count);
         return;
     }
-
 
     do
     {
@@ -4923,11 +4944,9 @@ void ObjectMgr::LoadAreaTriggerScripts()
 
     if (!result)
     {
-
         sLog.outString(">> Loaded %u areatrigger scripts", count);
         return;
     }
-
 
     do
     {
@@ -5053,7 +5072,6 @@ void ObjectMgr::LoadGraveyardZones()
 
     if (!result)
     {
-
         sLog.outString(">> Loaded 0 graveyard-zone links. DB table `graveyard_zone` is empty.");
         return;
     }
@@ -7250,15 +7268,12 @@ void ObjectMgr::LoadVendors()
 
     std::set<uint32> skip_vendors;
 
-    QueryResult_AutoPtr result = WorldDatabase.Query("SELECT entry, item, maxcount, incrtime, ExtendedCost FROM npc_vendor");
+    QueryResult_AutoPtr result = WorldDatabase.Query("SELECT entry, item, maxcount, incrtime, ExtendedCost FROM npc_vendor ORDER BY slot");
     if (!result)
     {
-
-
         sLog.outErrorDb(">> Loaded npc_vendor, table is empty!");
         return;
     }
-
 
     uint32 count = 0;
     do
@@ -7293,12 +7308,9 @@ void ObjectMgr::LoadNpcTextId()
     QueryResult_AutoPtr result = WorldDatabase.Query("SELECT npc_guid, textid FROM npc_gossip");
     if (!result)
     {
-
-
         sLog.outErrorDb(">> Loaded npc_gossip, table is empty!");
         return;
     }
-
 
     uint32 count = 0;
     uint32 guid, textid;

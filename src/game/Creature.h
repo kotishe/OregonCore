@@ -283,6 +283,9 @@ struct CreatureData
     uint32 curmana;
     uint8 movementType;
     uint8 spawnMask;
+    uint32 npcflag;
+    uint32 unit_flags;                                      // enum UnitFlags mask values
+    uint32 dynamicflags;
     bool dbData;
 };
 
@@ -301,8 +304,6 @@ struct CreatureDataAddon
     uint32 bytes1;
     uint32 bytes2;
     uint32 emote;
-    uint32 move_flags;
-    uint32 isActive;
     CreatureDataAddonAura const* auras;                     // loaded as char* "spell1 eff1 spell2 eff2 ... "
 };
 

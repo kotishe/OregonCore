@@ -46,6 +46,8 @@ struct QEmote
     uint32 _Delay;
 };
 
+#define MAX_GOSSIP_TEXT_EMOTES 3
+
 struct GossipTextOption
 {
     std::string Text_0;
@@ -54,6 +56,8 @@ struct GossipTextOption
     float Probability;
     QEmote Emotes[3];
 };
+
+#define MAX_GOSSIP_TEXT_OPTIONS 8
 
 struct GossipText
 {

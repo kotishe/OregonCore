@@ -10059,6 +10059,10 @@ uint8 Player::CanEquipItem(uint8 slot, uint16& dest, Item* pItem, bool swap, boo
 
                 if (IsNonMeleeSpellCast(false))
                     return EQUIP_ERR_CANT_DO_RIGHT_NOW;
+
+                // prevent equip item in Spirit of Redemption (Aura: 27827)
+                if (HasAuraType(SPELL_AURA_SPIRIT_OF_REDEMPTION))
+                    return EQUIP_ERR_CANT_DO_RIGHT_NOW;
             }
 
             uint8 eslot = FindEquipSlot(pProto, slot, swap);
@@ -13345,19 +13349,6 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
 
     RemoveTimedQuest(quest_id);
 
-    if (pQuest->GetRewChoiceItemsCount() > 0)
-    {
-        if (uint32 itemId = pQuest->RewChoiceItemId[reward])
-        {
-            ItemPosCountVec dest;
-            if (CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, pQuest->RewChoiceItemCount[reward]) == EQUIP_ERR_OK)
-            {
-                Item* item = StoreNewItem(dest, itemId, true);
-                SendNewItem(item, pQuest->RewChoiceItemCount[reward], true, false);
-            }
-        }
-    }
-
     if (pQuest->GetRewItemsCount() > 0)
     {
         for (uint32 i = 0; i < pQuest->GetRewItemsCount(); ++i)
@@ -13374,7 +13365,18 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
         }
     }
 
-    RewardReputation(pQuest);
+    if (pQuest->GetRewChoiceItemsCount() > 0)
+    {
+        if (uint32 itemId = pQuest->RewChoiceItemId[reward])
+        {
+            ItemPosCountVec dest;
+            if (CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, pQuest->RewChoiceItemCount[reward]) == EQUIP_ERR_OK)
+            {
+                Item* item = StoreNewItem(dest, itemId, true);
+                SendNewItem(item, pQuest->RewChoiceItemCount[reward], true, false);
+            }
+        }
+    }
 
     uint16 log_slot = FindQuestSlot(quest_id);
     if (log_slot < MAX_QUEST_LOG_SIZE)
@@ -13427,6 +13429,8 @@ void Player::RewardQuest(Quest const* pQuest, uint32 reward, Object* questGiver,
 
     if (announce)
         SendQuestReward(pQuest, XP, questGiver);
+
+    RewardReputation(pQuest);
 
     switch (questGiver->GetTypeId())
     {
@@ -16864,7 +16868,7 @@ void Player::_SaveInventory()
                     bagTestGUID = test2->GetGUIDLow();
                 sLog.outError("Player(GUID: %u Name: %s)::_SaveInventory - the bag(%u) and slot(%u) values for the item with guid %u (state %d) are incorrect, the player doesn't have an item at that position!", lowGuid, GetName(), item->GetBagSlot(), item->GetSlot(), item->GetGUIDLow(), (int32)item->GetState());
                 // according to the test that was just performed nothing should be in this slot, delete
-                CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE bag=%u AND slot=%u", bagTestGUID, item->GetSlot());
+                CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE bag=%u AND slot=%u AND guid=%u", bagTestGUID, item->GetSlot(), lowGuid);
 
                 RemoveEnchantmentDurationsReferences(item);
                 RemoveItemDurations(item);
