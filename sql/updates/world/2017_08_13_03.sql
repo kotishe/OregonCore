@@ -28,9 +28,9 @@ INSERT INTO `smart_scripts` (`entryorguid`,`source_type`,`id`,`link`,`event_type
 (@ENTRY,9,2,0,0,0,100,0,1000,1000,0,0,1,1,5000,0,0,0,0,1,0,0,0,0,0,0,0,"Nekthar - On Script - Say Line 1");
 
 DELETE FROM `creature_text` WHERE `entry`=18248;
-INSERT INTO `creature_text` (`entry`, `groupid`, `id`, `text`, `type`, `language`, `probability`, `emote`, `duration`, `sound`, `BroadcastTextId`, `comment`) VALUES 
-(18248, 0, 0, 'Grunting, %s turns away from the wanted poster, returning to his warm spot by the fire.', 16, 0, 100, 0, 0, 0, 18782, 'Nekthar'),
-(18248, 1, 0, '%s begins to read the wanted poster.', 16, 0, 100, 0, 0, 0, 18781, 'Nekthar');
+INSERT INTO `creature_text` (`entry`, `groupid`, `id`, `text`, `type`, `language`, `probability`, `emote`, `duration`, `sound`, `comment`) VALUES 
+(18248, 0, 0, 'Grunting, %s turns away from the wanted poster, returning to his warm spot by the fire.', 16, 0, 100, 0, 0, 0, 'Nekthar'),
+(18248, 1, 0, '%s begins to read the wanted poster.', 16, 0, 100, 0, 0, 0, 'Nekthar');
 
 SET @PATH := 18248;
 DELETE FROM `waypoints` WHERE `entry`=@PATH;
